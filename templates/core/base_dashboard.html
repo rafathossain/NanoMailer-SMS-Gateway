@@ -129,16 +129,16 @@
                         </a>
                     </li>
 
-                    <li class="menu-title small text-uppercase">
+                    <li class="menu-title small text-uppercase{% if request.resolver_match.url_name in 'profile,change_password' %} open{% endif %}">
                         <span class="menu-title-text">ACCOUNT</span>
                     </li>
-                    <li class="menu-item">
+                    <li class="menu-item{% if request.resolver_match.url_name == 'profile' %} open{% endif %}">
                         <a href="{% url 'profile' %}" class="menu-link{% if request.resolver_match.url_name == 'profile' %} active{% endif %}">
                             <span class="material-symbols-outlined menu-icon">person</span>
                             <span class="title">Profile</span>
                         </a>
                     </li>
-                    <li class="menu-item">
+                    <li class="menu-item{% if request.resolver_match.url_name == 'change_password' %} open{% endif %}">
                         <a href="{% url 'change_password' %}" class="menu-link{% if request.resolver_match.url_name == 'change_password' %} active{% endif %}">
                             <span class="material-symbols-outlined menu-icon">lock</span>
                             <span class="title">Change Password</span>
@@ -204,9 +204,9 @@
                                             <div class="d-xxl-flex align-items-center bg-transparent border-0 text-start p-0 cursor dropdown-toggle" data-bs-toggle="dropdown">
                                                 <div class="flex-shrink-0">
                                                     {% if user_photo %}
-                                                        <img class="rounded-circle wh-40 administrator" src="{{ user_photo }}" alt="{{ user_full_name }}">
+                                                        <img class="rounded-circle wh-40 administrator" src="{{ user_photo }}" alt="{{ user_full_name }}" style="object-fit: contain;">
                                                     {% else %}
-                                                        <img class="rounded-circle wh-40 administrator" src="{% static 'assets/images/administrator.jpg' %}" alt="admin">
+                                                        <img class="rounded-circle wh-40 administrator" src="{% static 'assets/images/administrator.jpg' %}" alt="admin" style="object-fit: contain;">
                                                     {% endif %}
                                                 </div>
                                                 <div class="flex-grow-1 ms-2">
@@ -224,59 +224,21 @@
                                                 <div class="d-flex align-items-center info">
                                                     <div class="flex-shrink-0">
                                                         {% if user_photo %}
-                                                            <img class="rounded-circle wh-30 administrator" src="{{ user_photo }}" alt="{{ user_full_name }}">
+                                                            <img class="rounded-circle wh-30 administrator" src="{{ user_photo }}" alt="{{ user_full_name }}" style="object-fit: contain;">
                                                         {% else %}
-                                                            <img class="rounded-circle wh-30 administrator" src="{% static 'assets/images/administrator.jpg' %}" alt="admin">
+                                                            <img class="rounded-circle wh-30 administrator" src="{% static 'assets/images/administrator.jpg' %}" alt="admin" style="object-fit: contain;">
                                                         {% endif %}
                                                     </div>
                                                     <div class="flex-grow-1 ms-2">
                                                         <h3 class="fw-medium">{{ user_full_name|default:'User Name' }}</h3>
-                                                        <span class="fs-12">Account Holder</span>
+                                                        <span class="fs-12">{{ user_email|default:'User' }}</span>
                                                     </div>
                                                 </div>
                                                 <ul class="admin-link ps-0 mb-0 list-unstyled">
                                                     <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="#">
+                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="{% url 'profile' %}">
                                                             <i class="material-symbols-outlined">account_circle</i>
                                                             <span class="ms-2">My Profile</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="#">
-                                                            <i class="material-symbols-outlined">chat</i>
-                                                            <span class="ms-2">Messages</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="#">
-                                                            <i class="material-symbols-outlined">format_list_bulleted</i>
-                                                            <span class="ms-2">My Task</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="#">
-                                                            <i class="material-symbols-outlined">credit_card</i>
-                                                            <span class="ms-2">Billing</span>
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                                <ul class="admin-link ps-0 mb-0 list-unstyled">
-                                                    <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="#">
-                                                            <i class="material-symbols-outlined">settings</i>
-                                                            <span class="ms-2">Settings</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="#">
-                                                            <i class="material-symbols-outlined">support</i>
-                                                            <span class="ms-2">Support</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="#">
-                                                            <i class="material-symbols-outlined">lock</i>
-                                                            <span class="ms-2">Lock Screen</span>
                                                         </a>
                                                     </li>
                                                     <li>
@@ -305,6 +267,7 @@
         <!-- End Main Content Area -->
 
         <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
         <script src="{% static 'assets/js/dragdrop.js' %}"></script>
         <script src="{% static 'assets/js/rangeslider.min.js' %}"></script>
@@ -361,6 +324,37 @@
             });
             
             observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
+            
+            // Auto-scroll sidebar to active menu item on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                    var activeLink = document.querySelector('.menu-link.active');
+                    if (activeLink) {
+                        // Find the simplebar scroll element
+                        var simplebarContent = document.querySelector('.simplebar-content-wrapper');
+                        if (simplebarContent) {
+                            // Get the position of active link relative to the simplebar content
+                            var linkRect = activeLink.getBoundingClientRect();
+                            var contentRect = simplebarContent.getBoundingClientRect();
+                            var currentScroll = simplebarContent.scrollTop;
+                            
+                            // Calculate scroll position to center the active item
+                            var scrollPosition = currentScroll + linkRect.top - contentRect.top - (contentRect.height / 2) + (linkRect.height / 2);
+                            
+                            simplebarContent.scrollTo({
+                                top: Math.max(0, scrollPosition),
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                }, 100); // Small delay to ensure SimpleBar is initialized
+            });
+
+            // Initialize Bootstrap tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         </script>
     </body>
 </html>

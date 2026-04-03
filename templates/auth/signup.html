@@ -76,22 +76,23 @@
                                     </div>
                                     <div class="form-group mb-3">
                                         <label class="label text-secondary">Password</label>
-                                        <div class="position-relative">
-                                            <input type="password" id="password" name="password" class="form-control h-55 pe-5" placeholder="Type password" required>
-                                            <button type="button" class="password-toggle btn btn-link text-secondary position-absolute end-0 top-50 translate-middle-y me-3 p-0 text-decoration-none lh-1" data-target="password">
-                                                <i class="ri-eye-line fs-18"></i>
-                                            </button>
+                                        <div class="password-wrapper position-relative">
+                                            <input type="password" id="password" name="password" class="form-control h-55 text-dark" placeholder="Type password" required>
+                                            <i style="color: #A9A9C8; font-size: 16px; right: 15px; cursor: pointer;" class="ri-eye-off-line password-toggle-icon translate-middle-y top-50 position-absolute" data-target="password" aria-hidden="true"></i>
                                         </div>
                                     </div>
                                     <div class="form-group mb-3">
                                         <label class="label text-secondary">Confirm Password</label>
-                                        <div class="position-relative">
-                                            <input type="password" id="confirm_password" name="confirm_password" class="form-control h-55 pe-5" placeholder="Confirm password" required>
-                                            <button type="button" class="password-toggle btn btn-link text-secondary position-absolute end-0 top-50 translate-middle-y me-3 p-0 text-decoration-none lh-1" data-target="confirm_password">
-                                                <i class="ri-eye-line fs-18"></i>
-                                            </button>
+                                        <div class="password-wrapper position-relative">
+                                            <input type="password" id="confirm_password" name="confirm_password" class="form-control h-55 text-dark" placeholder="Confirm password" required>
+                                            <i style="color: #A9A9C8; font-size: 16px; right: 15px; cursor: pointer;" class="ri-eye-off-line password-toggle-icon translate-middle-y top-50 position-absolute" data-target="confirm_password" aria-hidden="true"></i>
                                         </div>
                                     </div>
+                                    {% if turnstile_site_key %}
+                                    <div class="form-group mb-3">
+                                        <div class="cf-turnstile" data-appearance="interaction-only" data-theme="light" data-sitekey="{{ turnstile_site_key }}"></div>
+                                    </div>
+                                    {% endif %}
                                     <div class="form-group mb-3">
                                         <button type="submit" class="btn btn-primary fw-medium py-2 px-3 w-100">
                                             <div class="d-flex align-items-center justify-content-center py-1">
@@ -131,19 +132,21 @@
         <script src="{% static 'assets/js/custom/apexcharts.js' %}"></script>
         <script src="{% static 'assets/js/custom/echarts.js' %}"></script>
         <script src="{% static 'assets/js/custom/custom.js' %}"></script>
+        {% if turnstile_site_key %}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        {% endif %}
         <script>
-            document.querySelectorAll('.password-toggle').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var input = document.getElementById(btn.dataset.target);
-                    var icon = btn.querySelector('i');
+            document.querySelectorAll('.password-toggle-icon').forEach(function(icon) {
+                icon.addEventListener('click', function() {
+                    var input = document.getElementById(icon.dataset.target);
                     if (input.type === 'password') {
                         input.type = 'text';
-                        icon.classList.remove('ri-eye-line');
-                        icon.classList.add('ri-eye-off-line');
-                    } else {
-                        input.type = 'password';
                         icon.classList.remove('ri-eye-off-line');
                         icon.classList.add('ri-eye-line');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('ri-eye-line');
+                        icon.classList.add('ri-eye-off-line');
                     }
                 });
             });

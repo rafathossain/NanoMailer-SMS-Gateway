@@ -1,4 +1,6 @@
+import json
 import re
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -17,9 +19,16 @@ def validate_bd_mobile_number(value):
 
 
 def user_profile_photo_path(instance, filename):
-    """Upload profile photos to users/{username}/profile/ directory"""
-    ext = filename.split('.')[-1]
-    return f'users/{instance.user.username}/profile/photo.{ext}'
+    """Upload profile photos to users/{username}/profile/ directory with UUID filename"""
+    ext = filename.split('.')[-1].lower()
+    # Use UUID for filename to prevent security issues and overwriting
+    unique_filename = f"{uuid.uuid4().hex}.{ext}"
+    # Sanitize username by removing special characters (keep only alphanumeric and underscore)
+    safe_username = re.sub(r'[^a-zA-Z0-9_]', '', instance.user.username)
+    # Fallback to 'user' if username is empty after sanitization
+    if not safe_username:
+        safe_username = 'user'
+    return f'users/{safe_username}/profile/{unique_filename}'
 
 
 class Profile(models.Model):
@@ -41,6 +50,30 @@ class Profile(models.Model):
         decimal_places=2,
         default=5.00,
         help_text='Account balance in BDT'
+    )
+    
+    # Additional profile fields
+    company_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Company or organization name'
+    )
+    designation = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Job title or designation'
+    )
+    address = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Physical address'
+    )
+    bio = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Short biography or description'
     )
     
     # User-specific SMS rates (optional, falls back to provider rates if not set)
@@ -130,8 +163,18 @@ class SMSProvider(models.Model):
         default=0.25,
         help_text='Rate per SMS for non-masking (in BDT)'
     )
+    balance = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0.00,
+        help_text='Current provider balance (in BDT)'
+    )
+    balance_last_updated = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Last time balance was synced'
+    )
     is_active = models.BooleanField(default=True, help_text='Is this provider active?')
-    is_default = models.BooleanField(default=False, help_text='Set as default provider')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -139,26 +182,27 @@ class SMSProvider(models.Model):
         db_table = 'sms_providers'
         verbose_name = 'SMS Provider'
         verbose_name_plural = 'SMS Providers'
-        ordering = ['-is_default', '-created_at']
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.name} ({self.provider_class})"
 
-    def save(self, *args, **kwargs):
-        # If this provider is set as default, unset others
-        if self.is_default:
-            SMSProvider.objects.filter(is_default=True).update(is_default=False)
-        super().save(*args, **kwargs)
+    @property
+    def credentials_json(self):
+        """Return credentials as formatted JSON string"""
+        if self.credentials:
+            return json.dumps(self.credentials, indent=2)
+        return ''
 
     @classmethod
     def get_default_provider(cls):
-        """Get the default active provider"""
-        return cls.objects.filter(is_active=True, is_default=True).first()
+        """Get the first provider as default"""
+        return cls.objects.first()
 
     @classmethod
     def get_active_providers(cls):
-        """Get all active providers"""
-        return cls.objects.filter(is_active=True)
+        """Get all providers"""
+        return cls.objects.all()
 
 
 class SenderID(models.Model):
@@ -173,7 +217,6 @@ class SenderID(models.Model):
         max_length=20,
         help_text='Sender ID (e.g., SMS-GW, MyBrand)'
     )
-    is_active = models.BooleanField(default=True, help_text='Is this sender ID active?')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -181,19 +224,11 @@ class SenderID(models.Model):
         db_table = 'sender_ids'
         verbose_name = 'Sender ID'
         verbose_name_plural = 'Sender IDs'
-        ordering = ['-is_active', '-created_at']
+        ordering = ['-created_at']
         unique_together = ['provider', 'sender_id']
 
     def __str__(self):
         return f"{self.sender_id} ({self.provider.name})"
-
-    @classmethod
-    def get_active_sender_ids(cls, provider=None):
-        """Get all active sender IDs, optionally filtered by provider"""
-        queryset = cls.objects.filter(is_active=True)
-        if provider:
-            queryset = queryset.filter(provider=provider)
-        return queryset
 
 
 class PaymentGateway(models.Model):
@@ -253,24 +288,16 @@ class PaymentGateway(models.Model):
 
 
 class DefaultRate(models.Model):
-    """Store default SMS rates for masking and non-masking"""
-    masking_rate = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0.35,
-        help_text='Default rate per SMS for masking (in BDT)'
-    )
-    non_masking_rate = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0.25,
-        help_text='Default rate per SMS for non-masking (in BDT)'
-    )
-    # Operator-specific rates stored as JSON
-    credentials = models.JSONField(
+    """
+    Store SMS rates for operators.
+    Each operator can have masking and non-masking rates stored in JSON.
+    """
+    # Operator-specific rates stored as nested JSON
+    # Format: {"gp": {"masking": 0.30, "non_masking": 0.25}, "bl": {...}}
+    operator_rates = models.JSONField(
         default=dict,
         blank=True,
-        help_text='Operator-specific SMS rates (JSON format)'
+        help_text='Operator-specific SMS rates. Format: {"gp": {"masking": 0.30, "non_masking": 0.25}, ...}'
     )
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -280,7 +307,7 @@ class DefaultRate(models.Model):
         verbose_name_plural = 'Default Rates'
 
     def __str__(self):
-        return f"Masking: ৳{self.masking_rate}, Non-Masking: ৳{self.non_masking_rate}"
+        return f"SMS Rates ({len(self.operator_rates)} operators)"
 
     @classmethod
     def get_instance(cls):
@@ -289,11 +316,45 @@ class DefaultRate(models.Model):
         return instance
 
     @classmethod
-    def get_masking_rate(cls):
-        """Get current masking rate"""
-        return cls.get_instance().masking_rate
+    def get_masking_rate(cls, operator='gp'):
+        """Get masking rate for an operator."""
+        instance = cls.get_instance()
+        op_rates = instance.operator_rates.get(operator, {})
+        return op_rates.get('masking', 0.35)
 
     @classmethod
-    def get_non_masking_rate(cls):
-        """Get current non-masking rate"""
-        return cls.get_instance().non_masking_rate
+    def get_non_masking_rate(cls, operator='gp'):
+        """Get non-masking rate for an operator."""
+        instance = cls.get_instance()
+        op_rates = instance.operator_rates.get(operator, {})
+        return op_rates.get('non_masking', 0.25)
+
+    def get_operator_rate(self, operator, message_type='masking'):
+        """Get rate for a specific operator and message type."""
+        op_rates = self.operator_rates.get(operator, {})
+        return op_rates.get(message_type, 0.35 if message_type == 'masking' else 0.25)
+
+    def set_operator_rate(self, operator, message_type, rate):
+        """Set rate for a specific operator and message type."""
+        if operator not in self.operator_rates:
+            self.operator_rates[operator] = {}
+        self.operator_rates[operator][message_type] = rate
+
+    def get_all_operators(self):
+        """Get list of all operators with their rates."""
+        operators = {
+            'gp': 'Grameenphone',
+            'bl': 'Banglalink',
+            'robi': 'Robi',
+            'airtel': 'Airtel',
+            'teletalk': 'Teletalk',
+        }
+        result = {}
+        for code, name in operators.items():
+            op_rates = self.operator_rates.get(code, {})
+            result[code] = {
+                'name': name,
+                'masking': op_rates.get('masking'),
+                'non_masking': op_rates.get('non_masking'),
+            }
+        return result

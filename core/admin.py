@@ -13,24 +13,35 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
 
 @admin.register(SenderID)
 class SenderIDAdmin(admin.ModelAdmin):
-    list_display = ['sender_id', 'provider', 'is_active', 'created_at']
-    list_filter = ['provider', 'is_active']
+    list_display = ['sender_id', 'provider', 'created_at']
+    list_filter = ['provider']
     search_fields = ['sender_id', 'provider__name']
     readonly_fields = ['created_at', 'updated_at']
 
 
 @admin.register(SMSProvider)
 class SMSProviderAdmin(admin.ModelAdmin):
-    list_display = ['name', 'provider_class', 'masking_rate', 'non_masking_rate', 'is_active', 'is_default', 'updated_at']
-    list_filter = ['provider_class', 'is_active', 'is_default']
+    list_display = ['name', 'provider_class', 'masking_rate', 'non_masking_rate', 'updated_at']
+    list_filter = ['provider_class']
     search_fields = ['name']
     readonly_fields = ['created_at', 'updated_at']
 
 
 @admin.register(DefaultRate)
 class DefaultRateAdmin(admin.ModelAdmin):
-    list_display = ['masking_rate', 'non_masking_rate', 'updated_at']
+    list_display = ['operator_rates_summary', 'updated_at']
     readonly_fields = ['updated_at']
+    
+    def operator_rates_summary(self, obj):
+        """Display a summary of operator rates"""
+        rates = obj.get_all_operators()
+        parts = []
+        for code, data in rates.items():
+            masking = data.get('masking') or '-'
+            non_masking = data.get('non_masking') or '-'
+            parts.append(f"{code.upper()}: M={masking}, N={non_masking}")
+        return '; '.join(parts) if parts else 'No rates set'
+    operator_rates_summary.short_description = 'Operator Rates'
     
     def has_add_permission(self, request):
         """Prevent adding more than one instance"""

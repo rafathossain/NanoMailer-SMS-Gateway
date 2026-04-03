@@ -5,12 +5,15 @@ def user_profile_context(request):
     context = {
         'user_balance': 0.00,
         'user_full_name': 'Guest',
+        'user_email': None,
         'user_photo': None,
     }
     
     if request.user.is_authenticated:
         # Get user's full name
         context['user_full_name'] = request.user.get_full_name() or request.user.first_name or request.user.username
+        # Get user's email
+        context['user_email'] = request.user.email
         
         # Get user's profile data
         try:

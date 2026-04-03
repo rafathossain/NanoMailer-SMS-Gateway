@@ -1,8 +1,14 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
+from django.utils import timezone
 import json
-from .models import DefaultRate, SMSProvider, SenderID, PaymentGateway
+import logging
+from .models import DefaultRate, SMSProvider, SenderID, PaymentGateway, Profile
+
+# Logger
+general_logger = logging.getLogger('general')
 
 
 @login_required
@@ -12,37 +18,40 @@ def dashboard_view(request):
 
 @login_required
 def sms_rates_view(request):
-    # Get or create the default rate instance
+    """View for managing SMS rates for all operators."""
     default_rate = DefaultRate.get_instance()
+    
+    # Define operators
+    operators = {
+        'gp': 'Grameenphone',
+        'bl': 'Banglalink',
+        'robi': 'Robi',
+        'airtel': 'Airtel',
+        'teletalk': 'Teletalk',
+    }
     
     if request.method == 'POST':
         try:
-            # Update default rates
-            default_masking = request.POST.get('default_masking_rate', '').strip()
-            default_non_masking = request.POST.get('default_non_masking_rate', '').strip()
-            
-            if default_masking and default_non_masking:
-                default_rate.masking_rate = float(default_masking)
-                default_rate.non_masking_rate = float(default_non_masking)
-                default_rate.save()
-            
-            # Update operator-specific rates (stored in credentials JSON)
-            operators = ['gp', 'bl', 'robi', 'airtel', 'teletalk']
+            # Update operator-specific rates (stored in nested JSON)
+            # Format: {"gp": {"masking": 0.30, "non_masking": 0.25}, ...}
             operator_rates = {}
             
-            for op in operators:
-                masking_key = f'{op}_masking_rate'
-                non_masking_key = f'{op}_non_masking_rate'
+            for op_code in operators.keys():
+                masking_key = f'{op_code}_masking'
+                non_masking_key = f'{op_code}_non_masking'
                 masking_val = request.POST.get(masking_key, '').strip()
                 non_masking_val = request.POST.get(non_masking_key, '').strip()
                 
+                op_rate = {}
                 if masking_val:
-                    operator_rates[f'{op}_masking'] = float(masking_val)
+                    op_rate['masking'] = float(masking_val)
                 if non_masking_val:
-                    operator_rates[f'{op}_non_masking'] = float(non_masking_val)
+                    op_rate['non_masking'] = float(non_masking_val)
+                
+                if op_rate:
+                    operator_rates[op_code] = op_rate
             
-            # Save operator rates to default_rate credentials
-            default_rate.credentials = operator_rates
+            default_rate.operator_rates = operator_rates
             default_rate.save()
             
             messages.success(request, 'SMS rates updated successfully!')
@@ -51,23 +60,19 @@ def sms_rates_view(request):
         except ValueError:
             messages.error(request, 'Invalid rate values. Please enter valid numbers.')
     
-    # Prepare context with all rates
-    credentials = default_rate.credentials or {}
+    # Build operators list with their rates for the template
+    operators_list = []
+    for code, name in operators.items():
+        op_data = default_rate.operator_rates.get(code, {})
+        operators_list.append({
+            'code': code,
+            'name': name,
+            'masking_rate': op_data.get('masking'),
+            'non_masking_rate': op_data.get('non_masking'),
+        })
     
     context = {
-        'default_masking_rate': default_rate.masking_rate,
-        'default_non_masking_rate': default_rate.non_masking_rate,
-        # Operator rates from credentials
-        'gp_masking_rate': credentials.get('gp_masking', default_rate.masking_rate),
-        'gp_non_masking_rate': credentials.get('gp_non_masking', default_rate.non_masking_rate),
-        'bl_masking_rate': credentials.get('bl_masking', default_rate.masking_rate),
-        'bl_non_masking_rate': credentials.get('bl_non_masking', default_rate.non_masking_rate),
-        'robi_masking_rate': credentials.get('robi_masking', default_rate.masking_rate),
-        'robi_non_masking_rate': credentials.get('robi_non_masking', default_rate.non_masking_rate),
-        'airtel_masking_rate': credentials.get('airtel_masking', default_rate.masking_rate),
-        'airtel_non_masking_rate': credentials.get('airtel_non_masking', default_rate.non_masking_rate),
-        'teletalk_masking_rate': credentials.get('teletalk_masking', default_rate.masking_rate),
-        'teletalk_non_masking_rate': credentials.get('teletalk_non_masking', default_rate.non_masking_rate),
+        'operators': operators_list,
     }
     return render(request, 'core/sms_rates.html', context)
 
@@ -83,7 +88,6 @@ def provider_view(request):
             credentials_json = request.POST.get('credentials_json', '').strip()
             masking_rate = request.POST.get('masking_rate', '').strip()
             non_masking_rate = request.POST.get('non_masking_rate', '').strip()
-            is_default = request.POST.get('is_default') == 'on'
             
             if name and provider_class:
                 # Parse credentials JSON
@@ -106,12 +110,52 @@ def provider_view(request):
                     provider_class=provider_class,
                     credentials=credentials,
                     masking_rate=masking_rate_val,
-                    non_masking_rate=non_masking_rate_val,
-                    is_default=is_default
+                    non_masking_rate=non_masking_rate_val
                 )
                 messages.success(request, f'Provider "{name}" added successfully!')
             else:
                 messages.error(request, 'Please provide all required fields.')
+                
+        elif action == 'edit':
+            provider_id = request.POST.get('provider_id')
+            name = request.POST.get('name', '').strip()
+            provider_class = request.POST.get('provider_class', '').strip()
+            credentials_json = request.POST.get('credentials_json', '').strip()
+            masking_rate = request.POST.get('masking_rate', '').strip()
+            non_masking_rate = request.POST.get('non_masking_rate', '').strip()
+            
+            if not name or not provider_class:
+                messages.error(request, 'Provider name and class are required.')
+                return redirect('provider')
+            
+            try:
+                provider = SMSProvider.objects.get(id=provider_id)
+                
+                # Parse credentials JSON
+                try:
+                    credentials = json.loads(credentials_json) if credentials_json else {}
+                except json.JSONDecodeError:
+                    messages.error(request, 'Invalid JSON format for credentials.')
+                    return redirect('provider')
+                
+                # Parse rates
+                try:
+                    masking_rate_val = float(masking_rate) if masking_rate else 0.35
+                    non_masking_rate_val = float(non_masking_rate) if non_masking_rate else 0.25
+                except ValueError:
+                    messages.error(request, 'Invalid rate values.')
+                    return redirect('provider')
+                
+                provider.name = name
+                provider.provider_class = provider_class
+                provider.credentials = credentials
+                provider.masking_rate = masking_rate_val
+                provider.non_masking_rate = non_masking_rate_val
+                provider.save()
+                
+                messages.success(request, f'Provider "{name}" updated successfully!')
+            except SMSProvider.DoesNotExist:
+                messages.error(request, 'Provider not found.')
                 
         elif action == 'delete':
             provider_id = request.POST.get('provider_id')
@@ -135,15 +179,14 @@ def provider_view(request):
             try:
                 provider = SMSProvider.objects.get(id=provider_id)
                 
-                # Send test SMS using sms_gateway
-                from sms_gateway.utils import send_sms
+                # Send test SMS directly without logging
+                from sms_gateway.revesms import ReveSMSProvider
                 
-                result = send_sms(
+                sms_provider = ReveSMSProvider(provider.credentials)
+                result = sms_provider.send_sms(
                     recipient=mobile_number,
                     message=message,
-                    sender_id=sender_id if sender_id else None,
-                    provider=provider,
-                    user=request.user if request.user.is_authenticated else None
+                    sender_id=sender_id if sender_id else None
                 )
                 
                 if result.get('success'):
@@ -161,8 +204,43 @@ def provider_view(request):
                 messages.error(request, 'Provider not found.')
             except Exception as e:
                 messages.error(request, f'Error sending test SMS: {str(e)}')
+            
+            return redirect('provider')
+        
+        elif action == 'sync_balance':
+            provider_id = request.POST.get('provider_id')
+            
+            try:
+                provider = SMSProvider.objects.get(id=provider_id)
+                
+                # Check balance using the provider
+                from sms_gateway.revesms import ReveSMSProvider
+                
+                sms_provider = ReveSMSProvider(provider.credentials)
+                result = sms_provider.check_balance()
+                
+                if result.get('success'):
+                    provider.balance = result.get('balance', 0)
+                    provider.balance_last_updated = timezone.now()
+                    provider.save()
+                    messages.success(
+                        request, 
+                        f'Balance synced successfully! Current balance: ঳{provider.balance}'
+                    )
+                else:
+                    messages.error(
+                        request, 
+                        f'Failed to sync balance: {result.get("message", "Unknown error")}'
+                    )
+                    
+            except SMSProvider.DoesNotExist:
+                messages.error(request, 'Provider not found.')
+            except Exception as e:
+                messages.error(request, f'Error syncing balance: {str(e)}')
+            
+            return redirect('provider')
     
-    providers = SMSProvider.objects.all().order_by('-is_default', '-created_at')
+    providers = SMSProvider.objects.all().order_by('-created_at')
     context = {
         'providers': providers,
         'provider_choices': SMSProvider.PROVIDER_CHOICES,
@@ -178,7 +256,6 @@ def sender_id_view(request):
         if action == 'add':
             provider_id = request.POST.get('provider', '').strip()
             sender_id_text = request.POST.get('sender_id', '').strip()
-            is_active = request.POST.get('is_active') == 'on'
             
             if provider_id and sender_id_text:
                 try:
@@ -189,8 +266,7 @@ def sender_id_view(request):
                     else:
                         SenderID.objects.create(
                             provider=provider,
-                            sender_id=sender_id_text,
-                            is_active=is_active
+                            sender_id=sender_id_text
                         )
                         messages.success(request, f'Sender ID "{sender_id_text}" added successfully!')
                 except SMSProvider.DoesNotExist:
@@ -207,7 +283,7 @@ def sender_id_view(request):
             except SenderID.DoesNotExist:
                 messages.error(request, 'Sender ID not found.')
     
-    sender_ids = SenderID.objects.all().select_related('provider').order_by('-is_active', '-created_at')
+    sender_ids = SenderID.objects.all().select_related('provider').order_by('-created_at')
     providers = SMSProvider.objects.filter(is_active=True)
     context = {
         'sender_ids': sender_ids,
@@ -300,11 +376,160 @@ def api_key_view(request):
 
 @login_required
 def profile_view(request):
-    return render(request, 'core/profile.html')
+    """Profile view with real user data"""
+    from django.contrib.auth.models import User
+    from sms_gateway.models import SMSLog
+    from payment_gateway.models import Transaction
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    user = request.user
+    
+    # Get or create user profile
+    profile, created = Profile.objects.get_or_create(
+        user=user,
+        defaults={
+            'mobile_number': '01' + str(user.id).zfill(9),
+            'balance': 5.00
+        }
+    )
+    
+    # Get real statistics
+    sms_sent = SMSLog.objects.filter(user=user).count()
+    recharges = Transaction.objects.filter(user=user, status='COMPLETED').count()
+    
+    # Calculate years since joined
+    days_since_joined = (timezone.now() - user.date_joined).days
+    years_member = max(1, days_since_joined // 365)
+    
+    # Get last login formatted
+    last_login = user.last_login
+    if last_login:
+        # Check if last login was today
+        if last_login.date() == timezone.now().date():
+            last_login_str = f"Today, {last_login.strftime('%I:%M %p')}"
+        else:
+            last_login_str = last_login.strftime('%b %d, %Y')
+    else:
+        last_login_str = "Never"
+    
+    # Format date joined
+    date_joined_str = user.date_joined.strftime('%b %d, %Y')
+    
+    # Handle profile update
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        
+        if action == 'update_profile':
+            # Update user info
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
+            
+            user.first_name = first_name
+            user.last_name = last_name
+            user.save()
+            
+            # Update profile info
+            address = request.POST.get('address', '').strip()
+            
+            profile.address = address
+            profile.save()
+            
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+        
+        elif action == 'update_password':
+            current_password = request.POST.get('current_password', '')
+            new_password = request.POST.get('new_password', '')
+            confirm_password = request.POST.get('confirm_password', '')
+            
+            # Validate
+            if not user.check_password(current_password):
+                messages.error(request, 'Current password is incorrect.')
+            elif new_password != confirm_password:
+                messages.error(request, 'New password and confirm password do not match.')
+            elif len(new_password) < 8:
+                messages.error(request, 'Password must be at least 8 characters long.')
+            else:
+                user.set_password(new_password)
+                user.save()
+                from django.contrib.auth import update_session_auth_hash
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Password updated successfully!')
+            return redirect('profile')
+        
+        elif action == 'update_photo':
+            if request.FILES.get('photo'):
+                from django.core.files.storage import default_storage
+                # Delete old photo if it exists and is not the default
+                default_photo = 'images/administrator.jpg'
+                if profile.photo and profile.photo.name != default_photo:
+                    try:
+                        if default_storage.exists(profile.photo.name):
+                            default_storage.delete(profile.photo.name)
+                    except Exception:
+                        pass  # Ignore errors if file doesn't exist
+                
+                profile.photo = request.FILES['photo']
+                profile.save()
+                messages.success(request, 'Profile photo updated successfully!')
+            else:
+                messages.error(request, 'Please select a photo to upload.')
+            return redirect('profile')
+    
+    context = {
+        'profile': profile,
+        'sms_sent': sms_sent,
+        'recharges': recharges,
+        'years_member': years_member,
+        'last_login_str': last_login_str,
+        'date_joined_str': date_joined_str,
+    }
+    return render(request, 'core/profile.html', context)
 
 
 @login_required
 def change_password_view(request):
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password', '')
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        
+        # Validate inputs
+        if not old_password or not new_password or not confirm_password:
+            messages.error(request, 'All fields are required.')
+            return render(request, 'core/change_password.html')
+        
+        # Check if new passwords match
+        if new_password != confirm_password:
+            messages.error(request, 'New password and confirm password do not match.')
+            return render(request, 'core/change_password.html')
+        
+        # Check if old password is correct
+        if not request.user.check_password(old_password):
+            messages.error(request, 'Current password is incorrect.')
+            return render(request, 'core/change_password.html')
+        
+        # Check password length
+        if len(new_password) < 8:
+            messages.error(request, 'New password must be at least 8 characters long.')
+            return render(request, 'core/change_password.html')
+        
+        # Change password
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        # Update session to prevent logout
+        from django.contrib.auth import update_session_auth_hash
+        update_session_auth_hash(request, request.user)
+        
+        # Log password change with IP and timestamp
+        user_ip = request.META.get('REMOTE_ADDR', 'unknown')
+        general_logger.info(f"User '{request.user.username}' changed password from IP: {user_ip}")
+        
+        messages.success(request, 'Your password has been changed successfully.')
+        return redirect('change_password')
+    
     return render(request, 'core/change_password.html')
 
 

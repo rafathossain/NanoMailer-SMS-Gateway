@@ -43,93 +43,83 @@
         {% endfor %}
     {% endif %}
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card bg-white border-0 rounded-3 mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
-                        <h3 class="mb-0">SMS Providers</h3>
-                        <button class="btn btn-outline-primary hover-bg fs-14 fw-medium" data-bs-toggle="modal" data-bs-target="#addProviderModal">
-                            <i class="ri-add-line"></i>
-                            <span>Add Provider</span>
-                        </button>
-                    </div>
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-0">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
+                <h3 class="mb-0">SMS Providers</h3>
+                <button class="btn btn-outline-primary hover-bg fs-14 fw-medium" data-bs-toggle="modal" data-bs-target="#addProviderModal">
+                    <i class="ri-add-line"></i>
+                    <span>Add Provider</span>
+                </button>
+            </div>
 
-                    <div class="default-table-area style-two">
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Provider Name</th>
-                                        <th scope="col">Class</th>
-                                        <th scope="col">Masking (৳)</th>
-                                        <th scope="col">Non-Masking (৳)</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">Default</th>
-                                        <th scope="col">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for provider in providers %}
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-shrink-0">
-                                                    <span class="material-symbols-outlined fs-24 text-primary">business</span>
-                                                </div>
-                                                <div class="flex-grow-1 ms-2">
-                                                    <span class="fw-medium">{{ provider.name }}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-secondary">{{ provider.provider_class }}</td>
-                                        <td class="text-secondary">৳ {{ provider.masking_rate|floatformat:2 }}</td>
-                                        <td class="text-secondary">৳ {{ provider.non_masking_rate|floatformat:2 }}</td>
-                                        <td>
-                                            {% if provider.is_active %}
-                                                <span class="badge bg-success bg-opacity-10 text-success px-3 rounded-pill fs-12 fw-medium">Active</span>
-                                            {% else %}
-                                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 rounded-pill fs-12 fw-medium">Inactive</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if provider.is_default %}
-                                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill fs-12 fw-medium">Default</span>
-                                            {% else %}
-                                                <span class="text-secondary">-</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-1">
-                                                <button class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" data-bs-toggle="modal" data-bs-target="#viewProviderModal{{ provider.id }}" title="View Details">
-                                                    <i class="material-symbols-outlined fs-16 text-primary">visibility</i>
-                                                </button>
-                                                <button class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" data-bs-toggle="modal" data-bs-target="#sendTestSmsModal{{ provider.id }}" title="Send Test SMS">
-                                                    <i class="material-symbols-outlined fs-16 text-success">send</i>
-                                                </button>
-                                                <form method="post" action="{% url 'provider' %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this provider?');">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="provider_id" value="{{ provider.id }}">
-                                                    <button type="submit" class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" title="Delete">
-                                                        <i class="material-symbols-outlined fs-16 text-danger">delete</i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center py-4 text-secondary">
-                                            <i class="ri-inbox-line fs-24 mb-2 d-block"></i>
-                                            No providers found. Click "Add Provider" to create one.
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            <div class="default-table-area style-two all-products">
+                <style>
+                        .table-sm td, .table-sm th {
+                            padding: 0.25rem 0.5rem;
+                            white-space: nowrap;
+                        }
+                        .table-sm td:first-child, .table-sm th:first-child {
+                            padding-left: 1rem;
+                        }
+                        .table-sm td:last-child, .table-sm th:last-child {
+                            padding-right: 1rem;
+                        }
+                    </style>
+                    <div class="table-responsive">
+                    <table class="table table-sm align-middle" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Provider</th>
+                                <th>Balance</th>
+                                <th class="text-center">Masking</th>
+                                <th class="text-center">Non-Masking</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for provider in providers %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center" style="min-width: 0;">
+                                        <span class="material-symbols-outlined fs-24 text-primary flex-shrink-0">business</span>
+                                        <div class="ms-2 ps-1 overflow-hidden text-truncate">
+                                            <h6 class="fw-medium fs-14 mb-0 text-truncate">{{ provider.name }}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-secondary">
+                                    ৳ {{ provider.balance|floatformat:2 }}
+                                    <button class="btn btn-link p-0 ms-1" onclick="syncBalance({{ provider.id }})" title="Sync Balance">
+                                        <i class="material-symbols-outlined fs-14 text-primary">sync</i>
+                                    </button>
+                                </td>
+                                <td class="text-secondary text-center">৳ {{ provider.masking_rate|floatformat:2 }}</td>
+                                <td class="text-secondary text-center">৳ {{ provider.non_masking_rate|floatformat:2 }}</td>
+                                <td class="text-end">
+                                    <div class="d-flex align-items-center justify-content-end gap-1">
+                                        <button class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" data-bs-toggle="modal" data-bs-target="#editProviderModal{{ provider.id }}">
+                                            <i class="material-symbols-outlined fs-16 text-body">edit</i>
+                                        </button>
+                                        <button class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" data-bs-toggle="modal" data-bs-target="#sendTestSmsModal{{ provider.id }}">
+                                            <i class="material-symbols-outlined fs-16 text-success">send</i>
+                                        </button>
+                                        <button type="button" class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" onclick="deleteProvider({{ provider.id }}, '{{ provider.name|escapejs }}')">
+                                            <i class="material-symbols-outlined fs-16 text-danger">delete</i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-secondary">
+                                    <i class="ri-inbox-line fs-24 mb-2 d-block"></i>
+                                    No providers found. Click "Add Provider" to create one.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -137,28 +127,28 @@
 </div>
 
 <!-- Add Provider Modal -->
-<div class="modal fade" id="addProviderModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
-        <div class="modal-content p-4 p-md-5">
-            <div class="modal-header p-0 border-0">
-                <h3 class="mb-0">Add SMS Provider</h3>
+<div class="modal fade" id="addProviderModal" tabindex="-1" aria-labelledby="addProviderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="addProviderModalLabel">Add SMS Provider</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0 pt-4">
-                <form method="post" action="{% url 'provider' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="add">
+            <form method="post" action="{% url 'provider' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body">
                     <div class="row">
                         <div class="col-sm-12">
-                            <div class="mb-4">
-                                <label class="label text-secondary">Provider Name</label>
-                                <input type="text" name="name" class="form-control h-55" placeholder="e.g., ReveSMS Primary" required>
+                            <div class="mb-3">
+                                <label class="form-label">Provider Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="e.g., ReveSMS Primary" required>
                             </div>
                         </div>
                         <div class="col-sm-12">
-                            <div class="mb-4">
-                                <label class="label text-secondary">Provider Class</label>
-                                <select name="provider_class" class="form-select form-control h-55" required>
+                            <div class="mb-3">
+                                <label class="form-label">Provider Class</label>
+                                <select name="provider_class" class="form-select form-control" required>
                                     <option value="">Select Provider</option>
                                     {% for value, label in provider_choices %}
                                     <option value="{{ value }}">{{ label }}</option>
@@ -167,107 +157,91 @@
                             </div>
                         </div>
                         <div class="col-sm-6">
-                            <div class="mb-4">
-                                <label class="label text-secondary">Masking Rate (৳)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">৳</span>
-                                    <input type="number" name="masking_rate" step="0.01" min="0" class="form-control h-55" placeholder="0.35" value="0.35" required>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Masking Rate</label>
+                                <input type="number" name="masking_rate" step="0.01" min="0" class="form-control" placeholder="0.35" value="0.35" required>
                             </div>
                         </div>
                         <div class="col-sm-6">
-                            <div class="mb-4">
-                                <label class="label text-secondary">Non-Masking Rate (৳)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">৳</span>
-                                    <input type="number" name="non_masking_rate" step="0.01" min="0" class="form-control h-55" placeholder="0.25" value="0.25" required>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Non-Masking Rate</label>
+                                <input type="number" name="non_masking_rate" step="0.01" min="0" class="form-control" placeholder="0.25" value="0.25" required>
                             </div>
                         </div>
                         <div class="col-sm-12">
-                            <div class="mb-4">
-                                <label class="label text-secondary">Credentials (JSON)</label>
-                                <textarea name="credentials_json" class="form-control" rows="5" placeholder='{"api_key": "your_api_key", "api_secret": "your_secret", "sender_id": "SMS-GW"}'></textarea>
-                                <span class="fs-12 text-secondary mt-1 d-block">Enter provider credentials in JSON format</span>
-                            </div>
-                        </div>
-                        <div class="col-sm-12">
-                            <div class="form-check mb-2">
-                                <input type="checkbox" name="is_default" class="form-check-input" id="isDefaultCheck">
-                                <label class="form-check-label text-secondary" for="isDefaultCheck">Set as default provider</label>
+                            <div class="mb-3">
+                                <label class="form-label">Credentials (JSON)</label>
+                                <textarea name="credentials_json" class="form-control" rows="4" placeholder='{"api_key": "your_api_key", "api_secret": "your_secret", "sender_id": "SMS-GW"}'></textarea>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-0 pt-2">
-                        <button type="button" class="btn btn-outline-danger px-4" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary hover-bg px-4">
-                            <i class="ri-save-line me-1"></i> Add Provider
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary text-white">Save Provider</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- View Provider Modals -->
+<!-- Edit Provider Modals -->
 {% for provider in providers %}
-<div class="modal fade" id="viewProviderModal{{ provider.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
-        <div class="modal-content p-4">
-            <div class="modal-header p-0 border-0">
-                <h3 class="mb-0">Provider Details</h3>
+<div class="modal fade" id="editProviderModal{{ provider.id }}" tabindex="-1" aria-labelledby="editProviderModalLabel{{ provider.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="editProviderModalLabel{{ provider.id }}">Edit SMS Provider</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0 pt-4">
-                <div class="mb-3">
-                    <span class="text-secondary fs-12">Name</span>
-                    <p class="fw-medium mb-0">{{ provider.name }}</p>
+            <form method="post" action="{% url 'provider' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="mb-3">
+                                <label class="form-label">Provider Name</label>
+                                <input type="text" name="name" class="form-control" value="{{ provider.name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="mb-3">
+                                <label class="form-label">Provider Class</label>
+                                <select name="provider_class" class="form-select form-control" required>
+                                    <option value="">Select Provider</option>
+                                    {% for value, label in provider_choices %}
+                                    <option value="{{ value }}" {% if provider.provider_class == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">Masking Rate</label>
+                                <input type="number" name="masking_rate" step="0.01" min="0" class="form-control" value="{{ provider.masking_rate|floatformat:2 }}" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">Non-Masking Rate</label>
+                                <input type="number" name="non_masking_rate" step="0.01" min="0" class="form-control" value="{{ provider.non_masking_rate|floatformat:2 }}" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="mb-3">
+                                <label class="form-label">Credentials (JSON)</label>
+                                <textarea name="credentials_json" class="form-control" rows="4">{{ provider.credentials_json }}</textarea>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <span class="text-secondary fs-12">Provider Class</span>
-                    <p class="fw-medium mb-0">{{ provider.provider_class }}</p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary text-white">Update Provider</button>
                 </div>
-                <div class="mb-3">
-                    <span class="text-secondary fs-12">Masking Rate</span>
-                    <p class="fw-medium mb-0">৳ {{ provider.masking_rate|floatformat:2 }}</p>
-                </div>
-                <div class="mb-3">
-                    <span class="text-secondary fs-12">Non-Masking Rate</span>
-                    <p class="fw-medium mb-0">৳ {{ provider.non_masking_rate|floatformat:2 }}</p>
-                </div>
-                <div class="mb-3">
-                    <span class="text-secondary fs-12">Credentials (JSON)</span>
-                    <pre class="bg-light p-2 rounded fs-12 mb-0" style="max-height: 150px; overflow: auto;">{{ provider.credentials|json_script:"credentials"|safe }}</pre>
-                </div>
-                <div class="mb-3">
-                    <span class="text-secondary fs-12">Status</span>
-                    <p class="mb-0">
-                        {% if provider.is_active %}
-                            <span class="badge bg-success bg-opacity-10 text-success">Active</span>
-                        {% else %}
-                            <span class="badge bg-danger bg-opacity-10 text-danger">Inactive</span>
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="mb-3">
-                    <span class="text-secondary fs-12">Default</span>
-                    <p class="mb-0">
-                        {% if provider.is_default %}
-                            <span class="badge bg-primary bg-opacity-10 text-primary">Yes</span>
-                        {% else %}
-                            <span class="text-secondary">No</span>
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="mb-0">
-                    <span class="text-secondary fs-12">Last Updated</span>
-                    <p class="fw-medium mb-0">{{ provider.updated_at|date:"M d, Y H:i" }}</p>
-                </div>
-            </div>
-            <div class="modal-footer border-0 p-0 pt-3">
-                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Close</button>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -275,43 +249,30 @@
 
 <!-- Send Test SMS Modals -->
 {% for provider in providers %}
-<div class="modal fade" id="sendTestSmsModal{{ provider.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
-        <div class="modal-content p-4">
-            <div class="modal-header p-0 border-0">
-                <h3 class="mb-0">
-                    <i class="ri-send-plane-line me-2 text-success"></i>Send Test SMS
-                </h3>
+<div class="modal fade" id="sendTestSmsModal{{ provider.id }}" tabindex="-1" aria-labelledby="sendTestSmsModalLabel{{ provider.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="sendTestSmsModalLabel{{ provider.id }}">Send Test SMS</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0 pt-4">
-                <div class="alert bg-info bg-opacity-10 border-0 text-info fs-13 mb-4">
-                    <i class="ri-information-line me-1"></i>
-                    Testing provider: <strong>{{ provider.name }}</strong>
-                </div>
-                
-                <form method="post" action="{% url 'provider' %}" id="testSmsForm{{ provider.id }}">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="send_test_sms">
-                    <input type="hidden" name="provider_id" value="{{ provider.id }}">
-                    
+            <form method="post" action="{% url 'provider' %}" class="test-sms-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_test_sms">
+                <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                <div class="modal-body">
                     <div class="mb-3">
-                        <label class="label text-secondary mb-2">Mobile Number</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">+88</span>
-                            <input type="tel" 
-                                   name="mobile_number" 
-                                   class="form-control h-55" 
-                                   placeholder="01XXXXXXXXX" 
-                                   pattern="01[3-9]\d{8}"
-                                   maxlength="11"
-                                   required>
-                        </div>
-                        <span class="fs-12 text-secondary mt-1 d-block">Enter 11-digit Bangladeshi mobile number</span>
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" 
+                               name="mobile_number" 
+                               class="form-control" 
+                               placeholder="01XXXXXXXXX" 
+                               pattern="01[3-9]\d{8}"
+                               maxlength="11"
+                               required>
                     </div>
-                    
                     <div class="mb-3">
-                        <label class="label text-secondary mb-2">Message</label>
+                        <label class="form-label">Message</label>
                         <textarea name="message" 
                                   class="form-control" 
                                   rows="4" 
@@ -319,35 +280,71 @@
                                   maxlength="160"
                                   required
                                   oninput="updateCharCount(this, 'charCount{{ provider.id }}')"></textarea>
-                        <div class="d-flex justify-content-between mt-1">
-                            <span class="fs-12 text-secondary" id="charCount{{ provider.id }}">0 / 160 characters</span>
-                            <span class="fs-12 text-secondary">Standard SMS (GSM 7-bit)</span>
-                        </div>
+                        <span class="fs-12 text-secondary" id="charCount{{ provider.id }}">0 / 160 characters</span>
                     </div>
-                    
                     <div class="mb-3">
-                        <label class="label text-secondary mb-2">Sender ID</label>
+                        <label class="form-label">Sender ID</label>
                         <input type="text" 
                                name="sender_id" 
-                               class="form-control h-55" 
+                               class="form-control" 
                                value="{{ provider.credentials.sender_id|default:'NanoMailer' }}"
                                maxlength="11">
-                        <span class="fs-12 text-secondary mt-1 d-block">Maximum 11 characters</span>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0 p-0 pt-3">
-                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="testSmsForm{{ provider.id }}" class="btn btn-success px-4">
-                    <i class="ri-send-plane-line me-1"></i>Send SMS
-                </button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary text-white">Send SMS</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 {% endfor %}
 
 <script>
+    // Credential templates for each provider class
+    const CREDENTIAL_TEMPLATES = {
+        'REVESMS': {
+            'api_key': '',
+            'secret_key': '',
+            'sender_id': 'NanoMailer'
+        }
+    };
+
+    // Function to format JSON with indentation
+    function formatJSON(obj) {
+        return JSON.stringify(obj, null, 2);
+    }
+
+    // Function to check if credentials field is empty
+    function isCredentialsEmpty(textarea) {
+        const val = textarea.value.trim();
+        if (!val) return true;
+        try {
+            const parsed = JSON.parse(val);
+            return Object.keys(parsed).length === 0;
+        } catch (e) {
+            return true;
+        }
+    }
+
+    // Add event listener to provider class select in Add Provider Modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const providerClassSelect = document.querySelector('#addProviderModal select[name="provider_class"]');
+        const credentialsTextarea = document.querySelector('#addProviderModal textarea[name="credentials_json"]');
+        
+        if (providerClassSelect && credentialsTextarea) {
+            providerClassSelect.addEventListener('change', function() {
+                const providerClass = this.value;
+                const template = CREDENTIAL_TEMPLATES[providerClass];
+                
+                if (template && isCredentialsEmpty(credentialsTextarea)) {
+                    credentialsTextarea.value = formatJSON(template);
+                }
+            });
+        }
+    });
+
     function updateCharCount(textarea, counterId) {
         const count = textarea.value.length;
         const max = textarea.getAttribute('maxlength');
@@ -359,6 +356,118 @@
         } else {
             counter.classList.remove('text-danger');
         }
+    }
+
+    // Handle Test SMS form submission - close modal, show simple alert, then submit
+    document.addEventListener('DOMContentLoaded', function() {
+        const testSmsForms = document.querySelectorAll('.test-sms-form');
+        
+        testSmsForms.forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Close the modal
+                const modal = form.closest('.modal');
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                
+                // Show simple SweetAlert
+                Swal.fire({
+                    title: 'Sending SMS...',
+                    text: 'Please wait a moment while we process your message.',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    timer: 1000,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Submit form after short delay
+                setTimeout(function() {
+                    form.submit();
+                }, 500);
+            });
+        });
+    });
+
+    function syncBalance(providerId) {
+        Swal.fire({
+            title: 'Syncing Balance...',
+            text: 'Please wait while we fetch the latest balance.',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '{% url "provider" %}';
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'sync_balance';
+        
+        const providerIdInput = document.createElement('input');
+        providerIdInput.type = 'hidden';
+        providerIdInput.name = 'provider_id';
+        providerIdInput.value = providerId;
+        
+        form.appendChild(csrfToken);
+        form.appendChild(actionInput);
+        form.appendChild(providerIdInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function deleteProvider(providerId, providerName) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You are about to delete "' + providerName + '"',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '{% url "provider" %}';
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrfmiddlewaretoken';
+                csrfToken.value = '{{ csrf_token }}';
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete';
+                
+                const providerIdInput = document.createElement('input');
+                providerIdInput.type = 'hidden';
+                providerIdInput.name = 'provider_id';
+                providerIdInput.value = providerId;
+                
+                form.appendChild(csrfToken);
+                form.appendChild(actionInput);
+                form.appendChild(providerIdInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     }
 </script>
 {% endblock %}

@@ -3,12 +3,43 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from core.models import Profile, validate_bd_mobile_number
+import requests
 import re
+
+
+def verify_turnstile_token(token, remote_ip=None):
+    """Verify Cloudflare Turnstile token."""
+    if not settings.TURNSTILE_SECRET_KEY:
+        return True  # Skip verification if secret key is not configured
+    
+    if not token:
+        return False
+    
+    data = {
+        'secret': settings.TURNSTILE_SECRET_KEY,
+        'response': token,
+    }
+    if remote_ip:
+        data['remoteip'] = remote_ip
+    
+    try:
+        response = requests.post(settings.TURNSTILE_VERIFY_URL, data=data, timeout=5)
+        result = response.json()
+        return result.get('success', False)
+    except requests.RequestException:
+        return False
 
 
 def signin_view(request):
     if request.method == 'POST':
+        # Verify Turnstile token
+        turnstile_token = request.POST.get('cf-turnstile-response', '')
+        if not verify_turnstile_token(turnstile_token, request.META.get('REMOTE_ADDR')):
+            messages.error(request, 'CAPTCHA verification failed. Please try again.')
+            return render(request, 'auth/signin.html')
+        
         username_input = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
         
@@ -32,11 +63,21 @@ def signin_view(request):
             return redirect('dashboard')
         else:
             messages.error(request, 'Invalid email/mobile number or password.')
-    return render(request, 'auth/signin.html')
+    
+    context = {
+        'turnstile_site_key': settings.TURNSTILE_SITE_KEY,
+    }
+    return render(request, 'auth/signin.html', context)
 
 
 def signup_view(request):
     if request.method == 'POST':
+        # Verify Turnstile token
+        turnstile_token = request.POST.get('cf-turnstile-response', '')
+        if not verify_turnstile_token(turnstile_token, request.META.get('REMOTE_ADDR')):
+            messages.error(request, 'CAPTCHA verification failed. Please try again.')
+            return render(request, 'auth/signup.html')
+        
         name = request.POST.get('name', '').strip()
         email = request.POST.get('email', '').strip()
         mobile = request.POST.get('mobile', '').strip()
@@ -81,7 +122,10 @@ def signup_view(request):
             messages.success(request, 'Registration successful! Please log in to continue.')
             return redirect('signin')
 
-    return render(request, 'auth/signup.html')
+    context = {
+        'turnstile_site_key': settings.TURNSTILE_SITE_KEY,
+    }
+    return render(request, 'auth/signup.html', context)
 
 
 def verify_otp_view(request):

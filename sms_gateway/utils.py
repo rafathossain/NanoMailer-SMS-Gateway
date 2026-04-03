@@ -26,7 +26,7 @@ def get_sms_provider(provider_instance=None):
     if not provider_instance:
         raise ValueError("No SMS provider configured")
     
-    if provider_instance.provider_class == SMSProvider.ProviderClass.REVESMS:
+    if provider_instance.provider_class == 'REVESMS':
         return ReveSMSProvider(provider_instance.credentials)
     else:
         raise ValueError(f"Unsupported provider class: {provider_instance.provider_class}")
