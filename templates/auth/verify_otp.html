@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+		<link rel="stylesheet" href="{% static 'assets/css/sidebar-menu.css' %}">
+		<link rel="stylesheet" href="{% static 'assets/css/simplebar.css' %}">
+		<link rel="stylesheet" href="{% static 'assets/css/apexcharts.css' %}">
+		<link rel="stylesheet" href="{% static 'assets/css/prism.css' %}">
+		<link rel="stylesheet" href="{% static 'assets/css/rangeslider.css' %}">
+        <link rel="stylesheet" href="{% static 'assets/css/quill.snow.css' %}">
+        <link rel="stylesheet" href="{% static 'assets/css/google-icon.css' %}">
+        <link rel="stylesheet" href="{% static 'assets/css/remixicon.css' %}">
+        <link rel="stylesheet" href="{% static 'assets/css/swiper-bundle.min.css' %}">
+        <link rel="stylesheet" href="{% static 'assets/css/fullcalendar.main.css' %}">
+        <link rel="stylesheet" href="{% static 'assets/css/jsvectormap.min.css' %}">
+        <link rel="stylesheet" href="{% static 'assets/css/lightpick.css' %}">
+		<link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+
+		<link rel="icon" type="image/png" href="{% static 'assets/images/logo/nanomailer-icon.png' %}">
+		<title>SMS Gateway - Verify OTP</title>
+    </head>
+    <body class="boxed-size bg-white">
+        <div class="d-flex align-items-center justify-content-center min-vh-100 py-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-6">
+                        <div class="mw-480 mx-auto text-center">
+                            <div class="d-inline-block mb-4">
+                                <img src="{% static 'assets/images/logo.svg' %}" class="rounded-3 for-light-logo" alt="logo">
+                                <img src="{% static 'assets/images/white-logo.svg' %}" class="rounded-3 for-dark-logo" alt="logo">
+                            </div>
+                            <h3 class="fs-28 mb-2">Verify OTP</h3>
+                            <p class="fw-medium fs-16 mb-4">Enter the 6-digit code sent to your mobile number</p>
+
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags|default:'danger' }} alert-dismissible fade show mb-4 text-start" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <form method="post" action="{% url 'verify_otp' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="email" value="{{ email }}">
+                                <div class="form-group mb-4">
+                                    <label class="label text-secondary">Email</label>
+                                    <input type="email" class="form-control h-55" value="{{ email }}" disabled readonly>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label class="label text-secondary">OTP Code</label>
+                                    <input type="text" name="otp" class="form-control h-55 text-center fs-4 letter-spacing-2" placeholder="000000" required maxlength="6" inputmode="numeric" pattern="[0-9]{6}" title="Enter the 6-digit OTP code">
+                                </div>
+                                <div class="form-group mb-4">
+                                    <button type="submit" class="btn btn-primary fw-medium py-2 px-3 w-100">
+                                        <div class="d-flex align-items-center justify-content-center py-1">
+                                            <i class="material-symbols-outlined text-white fs-20 me-2">verified</i>
+                                            <span>Verify</span>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="form-group">
+                                    <p>Didn't receive the code? <a href="{% url 'signup' %}" class="fw-medium text-primary text-decoration-none">Register again</a></p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+        <script src="{% static 'assets/js/dragdrop.js' %}"></script>
+        <script src="{% static 'assets/js/rangeslider.min.js' %}"></script>
+        <script src="{% static 'assets/js/quill.min.js' %}"></script>
+        <script src="{% static 'assets/js/data-table.js' %}"></script>
+        <script src="{% static 'assets/js/prism.js' %}"></script>
+        <script src="{% static 'assets/js/clipboard.min.js' %}"></script>
+        <script src="{% static 'assets/js/feather.min.js' %}"></script>
+        <script src="{% static 'assets/js/simplebar.min.js' %}"></script>
+        <script src="{% static 'assets/js/apexcharts.min.js' %}"></script>
+        <script src="{% static 'assets/js/echarts.min.js' %}"></script>
+        <script src="{% static 'assets/js/swiper-bundle.min.js' %}"></script>
+        <script src="{% static 'assets/js/fullcalendar.main.js' %}"></script>
+        <script src="{% static 'assets/js/jsvectormap.min.js' %}"></script>
+        <script src="{% static 'assets/js/world-merc.js' %}"></script>
+        <script src="{% static 'assets/js/moment.min.js' %}"></script>
+        <script src="{% static 'assets/js/lightpick.js' %}"></script>
+        <script src="{% static 'assets/js/custom/apexcharts.js' %}"></script>
+        <script src="{% static 'assets/js/custom/echarts.js' %}"></script>
+        <script src="{% static 'assets/js/custom/custom.js' %}"></script>
+    </body>
+</html>

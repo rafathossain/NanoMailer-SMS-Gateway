@@ -1,0 +1,281 @@
+{% extends 'core/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Add Fund - SMS Gateway{% endblock %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Add Fund</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Billing</span>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Add Fund</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">Recharge Your Account</h3>
+                    
+                    <form id="addFundForm" method="POST" action="{% url 'payment_gateway:add_fund' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Amount Selection -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-4">
+                                    <label class="label text-secondary mb-2">Select Amount</label>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-4 col-sm-3">
+                                            <input type="radio" class="btn-check" name="preset_amount" id="amt500" value="500" autocomplete="off">
+                                            <label class="btn btn-outline-primary w-100 py-3" for="amt500">৳ 500</label>
+                                        </div>
+                                        <div class="col-4 col-sm-3">
+                                            <input type="radio" class="btn-check" name="preset_amount" id="amt1000" value="1000" autocomplete="off">
+                                            <label class="btn btn-outline-primary w-100 py-3" for="amt1000">৳ 1,000</label>
+                                        </div>
+                                        <div class="col-4 col-sm-3">
+                                            <input type="radio" class="btn-check" name="preset_amount" id="amt2000" value="2000" autocomplete="off">
+                                            <label class="btn btn-outline-primary w-100 py-3" for="amt2000">৳ 2,000</label>
+                                        </div>
+                                        <div class="col-4 col-sm-3">
+                                            <input type="radio" class="btn-check" name="preset_amount" id="amt5000" value="5000" autocomplete="off">
+                                            <label class="btn btn-outline-primary w-100 py-3" for="amt5000">৳ 5,000</label>
+                                        </div>
+                                        <div class="col-4 col-sm-3">
+                                            <input type="radio" class="btn-check" name="preset_amount" id="amt10000" value="10000" autocomplete="off">
+                                            <label class="btn btn-outline-primary w-100 py-3" for="amt10000">৳ 10,000</label>
+                                        </div>
+                                        <div class="col-4 col-sm-3">
+                                            <input type="radio" class="btn-check" name="preset_amount" id="amt15000" value="15000" autocomplete="off">
+                                            <label class="btn btn-outline-primary w-100 py-3" for="amt15000">৳ 15,000</label>
+                                        </div>
+                                        <div class="col-4 col-sm-3">
+                                            <input type="radio" class="btn-check" name="preset_amount" id="amt20000" value="20000" autocomplete="off">
+                                            <label class="btn btn-outline-primary w-100 py-3" for="amt20000">৳ 20,000</label>
+                                        </div>
+                                        <div class="col-4 col-sm-3">
+                                            <input type="radio" class="btn-check" name="preset_amount" id="amt_custom_radio" value="custom" autocomplete="off">
+                                            <label class="btn btn-outline-primary w-100 py-3" for="amt_custom_radio">Custom</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom Amount Input -->
+                            <div class="col-12" id="customAmountDiv" style="display: none;">
+                                <div class="form-group mb-4">
+                                    <label class="label text-secondary">Enter Custom Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">৳</span>
+                                        <input type="number" class="form-control h-55" id="customAmount" name="custom_amount" placeholder="Enter amount" min="10" step="1">
+                                    </div>
+                                    <span class="fs-12 text-secondary mt-1 d-block">Minimum recharge amount is ৳ 10</span>
+                                </div>
+                            </div>
+
+                            <!-- Payment Gateway Selection -->
+                            <div class="col-12">
+                                <div class="form-group mb-4">
+                                    <label class="label text-secondary mb-2">Select Payment Method</label>
+                                    <div class="row g-3">
+                                        {% for gateway in gateways %}
+                                        <div class="col-md-6">
+                                            <input type="radio" class="btn-check gateway-radio" 
+                                                   name="gateway_id" 
+                                                   id="gateway_{{ gateway.id }}" 
+                                                   value="{{ gateway.id }}" 
+                                                   data-tdr="{{ gateway.tdr }}"
+                                                   data-name="{{ gateway.name }}"
+                                                   {% if gateway.id == default_gateway.id %}checked{% endif %}
+                                                   autocomplete="off">
+                                            <label class="btn btn-outline-light border w-100 p-3 text-start position-relative gateway-label" for="gateway_{{ gateway.id }}">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-primary bg-opacity-10 rounded-3 p-2 me-3">
+                                                        <i class="ri-secure-payment-line fs-24 text-primary"></i>
+                                                    </div>
+                                                    <div class="text-start flex-grow-1">
+                                                        <span class="d-block fw-medium text-dark">{{ gateway.name }}</span>
+                                                        <span class="fs-12 text-secondary gateway-tdr-text">Charge: {{ gateway.tdr }}%</span>
+                                                    </div>
+                                                </div>
+                                                <span class="position-absolute top-50 end-0 translate-middle-y me-3 check-icon {% if gateway.id != default_gateway.id %}d-none{% endif %}">
+                                                    <i class="ri-check-circle-fill fs-20 text-primary"></i>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden amount field -->
+                        <input type="hidden" name="amount" id="finalAmount" value="">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Payment Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="card bg-white border-0 rounded-3 mb-4 sticky-top" style="top: 20px; z-index: 100;">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">Payment Summary</h3>
+                    
+                    <div class="bg-light rounded-3 p-3 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-secondary">Recharge Amount</span>
+                            <span class="fw-medium" id="summaryAmount">৳ 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-secondary">Gateway Charge</span>
+                            <span class="fw-medium" id="summaryCharge">৳ 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-secondary fs-12" id="chargePercent">(0%)</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-medium">Net Payable</span>
+                            <span class="fs-20 fw-bold text-primary" id="summaryTotal">৳ 0.00</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" form="addFundForm" class="btn btn-primary w-100 py-3 fw-medium fs-16" id="payNowBtn" disabled>
+                        <i class="ri-secure-payment-line me-1"></i> Pay Now
+                    </button>
+
+                    <div class="alert bg-info bg-opacity-10 border-0 text-info fs-13 mt-4 mb-0">
+                        <i class="ri-information-line me-1"></i>
+                        Your balance will be updated instantly after successful payment.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const presetAmounts = document.querySelectorAll('input[name="preset_amount"]');
+        const customAmountDiv = document.getElementById('customAmountDiv');
+        const customAmountInput = document.getElementById('customAmount');
+        const gatewayRadios = document.querySelectorAll('.gateway-radio');
+        const summaryAmount = document.getElementById('summaryAmount');
+        const summaryCharge = document.getElementById('summaryCharge');
+        const summaryTotal = document.getElementById('summaryTotal');
+        const chargePercent = document.getElementById('chargePercent');
+        const payNowBtn = document.getElementById('payNowBtn');
+        const form = document.getElementById('addFundForm');
+        const finalAmountInput = document.getElementById('finalAmount');
+
+        let selectedAmount = 0;
+        let selectedGatewayTdr = parseFloat(document.querySelector('.gateway-radio:checked')?.dataset.tdr || 0);
+        let selectedGatewayName = document.querySelector('.gateway-radio:checked')?.dataset.name || '';
+
+        // Format currency
+        function formatCurrency(amount) {
+            return '৳ ' + amount.toLocaleString('en-BD', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        // Update summary display
+        function updateSummary() {
+            const chargeRate = selectedGatewayTdr / 100;
+            const chargeAmount = selectedAmount * chargeRate;
+            const totalAmount = selectedAmount + chargeAmount;
+
+            summaryAmount.textContent = formatCurrency(selectedAmount);
+            summaryCharge.textContent = formatCurrency(chargeAmount);
+            summaryTotal.textContent = formatCurrency(totalAmount);
+            chargePercent.textContent = `(${selectedGatewayTdr}% ${selectedGatewayName} fee)`;
+
+            // Enable pay button only if amount is valid
+            if (selectedAmount >= 10) {
+                payNowBtn.disabled = false;
+            } else {
+                payNowBtn.disabled = true;
+            }
+        }
+
+        // Handle preset amount selection
+        presetAmounts.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customAmountDiv.style.display = 'block';
+                    customAmountInput.focus();
+                    selectedAmount = parseFloat(customAmountInput.value) || 0;
+                } else {
+                    customAmountDiv.style.display = 'none';
+                    selectedAmount = parseFloat(this.value);
+                }
+                updateSummary();
+            });
+        });
+
+        // Handle custom amount input
+        customAmountInput.addEventListener('input', function() {
+            selectedAmount = parseFloat(this.value) || 0;
+            updateSummary();
+        });
+
+        // Handle gateway selection
+        gatewayRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                selectedGatewayTdr = parseFloat(this.dataset.tdr);
+                selectedGatewayName = this.dataset.name;
+                
+                // Show/hide check icons
+                document.querySelectorAll('.check-icon').forEach(icon => icon.classList.add('d-none'));
+                this.closest('.col-md-6').querySelector('.check-icon').classList.remove('d-none');
+                
+                updateSummary();
+            });
+        });
+
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            // Validate amount
+            if (selectedAmount < 10) {
+                e.preventDefault();
+                alert('Minimum recharge amount is ৳ 10');
+                return false;
+            }
+
+            // Validate gateway selection
+            const selectedGateway = document.querySelector('input[name="gateway_id"]:checked');
+            if (!selectedGateway) {
+                e.preventDefault();
+                alert('Please select a payment gateway');
+                return false;
+            }
+
+            // Set final amount
+            finalAmountInput.value = selectedAmount;
+            
+            // Show loading state
+            payNowBtn.disabled = true;
+            payNowBtn.innerHTML = '<i class="ri-loader-4-line ri-spin me-1"></i> Processing...';
+        });
+
+        // Initialize
+        updateSummary();
+    });
+</script>
+{% endblock %}

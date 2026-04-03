@@ -1,0 +1,10 @@
+[project]
+name = "smsgateway"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=6.0.3",
+    "pillow>=12.2.0",
+    "whitenoise>=6.12.0",
+]

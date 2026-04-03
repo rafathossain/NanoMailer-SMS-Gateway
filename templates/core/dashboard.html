@@ -1,0 +1,92 @@
+{% extends 'core/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Dashboard - SMS Gateway{% endblock %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden">
+    <div class="row">
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card border-0 rounded-3 bg-white mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+                            <span class="d-block mb-1">Total SMS Sent</span>
+                            <h4 class="fs-20 mb-0">0</h4>
+                        </div>
+                        <div class="flex-shrink-0 ms-3">
+                            <i class="ri-send-plane-line fs-24 text-success for dark-bg d-inline-block text-center rounded-circle" style="width: 60px; height: 60px; line-height: 60px; background-color: #ECF0FF;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card border-0 rounded-3 bg-white mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+                            <span class="d-block mb-1">Wallet Balance</span>
+                            <h4 class="fs-20 mb-0">৳ 0.00</h4>
+                        </div>
+                        <div class="flex-shrink-0 ms-3">
+                            <i class="ri-wallet-3-line fs-24 text-primary for dark-bg d-inline-block text-center rounded-circle" style="width: 60px; height: 60px; line-height: 60px; background-color: #ECF0FF;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card border-0 rounded-3 bg-white mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+                            <span class="d-block mb-1">Sent (Masking)</span>
+                            <h4 class="fs-20 mb-0">0</h4>
+                        </div>
+                        <div class="flex-shrink-0 ms-3">
+                            <i class="ri-shield-check-line fs-24 text-primary-div for dark-bg d-inline-block text-center rounded-circle" style="width: 60px; height: 60px; line-height: 60px; background-color: #ECF0FF;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card border-0 rounded-3 bg-white mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+                            <span class="d-block mb-1">Sent (Non-masking)</span>
+                            <h4 class="fs-20 mb-0">0</h4>
+                        </div>
+                        <div class="flex-shrink-0 ms-3">
+                            <i class="ri-message-3-line fs-24 text-danger for dark-bg d-inline-block text-center rounded-circle" style="width: 60px; height: 60px; line-height: 60px; background-color: #ECF0FF;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 rounded-3 bg-white mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                        <h3 class="mb-0">SMS Usage Statistics</h3>
+                        <select class="form-select month-select form-control w-135 bg-border-color border-color bg-transparent" aria-label="Default select example">
+                            <option selected>Monthly</option>
+                            <option value="1">Last 90 days</option>
+                            <option value="2">Last 1 year</option>
+                        </select>
+                    </div>
+                    <div class="p-5 text-center text-muted">
+                        <span class="material-symbols-outlined fs-48 mb-2">bar_chart</span>
+                        <p class="mb-0">Chart will appear here once data is available.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
