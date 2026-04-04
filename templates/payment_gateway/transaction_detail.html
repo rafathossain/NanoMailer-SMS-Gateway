@@ -22,113 +22,348 @@
                     <a href="{% url 'payment_gateway:transactions' %}" class="fw-medium text-decoration-none">Transactions</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
-                    <span class="fw-medium">#{{ transaction.transaction_id }}</span>
+                    <span class="fw-medium">#{{ transaction.transaction_id|truncatechars:15 }}</span>
                 </li>
             </ol>
         </nav>
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success bg-success bg-opacity-10 border-0 text-success d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-error-warning-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="card bg-white border-0 rounded-3 mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="mb-0">Transaction #{{ transaction.transaction_id }}</h3>
-                        {% if transaction.status == 'COMPLETED' %}
-                        <span class="badge bg-success bg-opacity-10 text-success fs-14 px-3 py-2">
-                            <i class="ri-check-line me-1"></i>Completed
-                        </span>
-                        {% elif transaction.status == 'PENDING' %}
-                        <span class="badge bg-warning bg-opacity-10 text-warning fs-14 px-3 py-2">
-                            <i class="ri-time-line me-1"></i>Pending
-                        </span>
-                        {% elif transaction.status == 'FAILED' %}
-                        <span class="badge bg-danger bg-opacity-10 text-danger fs-14 px-3 py-2">
-                            <i class="ri-close-line me-1"></i>Failed
-                        </span>
-                        {% elif transaction.status == 'CANCELLED' %}
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary fs-14 px-3 py-2">
-                            <i class="ri-close-circle-line me-1"></i>Cancelled
-                        </span>
-                        {% elif transaction.status == 'INITIATED' %}
-                        <span class="badge bg-info bg-opacity-10 text-info fs-14 px-3 py-2">
-                            <i class="ri-loader-4-line me-1"></i>Initiated
-                        </span>
-                        {% else %}
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary fs-14 px-3 py-2">
-                            {{ transaction.status }}
-                        </span>
-                        {% endif %}
-                    </div>
+            <!-- Status Header Card -->
+            <style>
+                .status-header {
+                    background: #ffffff;
+                    border-radius: 16px;
+                    padding: 32px;
+                    text-align: center;
+                    border: 1px solid #e5e7eb;
+                    margin-bottom: 24px;
+                }
+                .status-header.completed { border-top: 4px solid #10b981; }
+                .status-header.pending { border-top: 4px solid #f59e0b; }
+                .status-header.failed { border-top: 4px solid #ef4444; }
+                .status-header.cancelled { border-top: 4px solid #6b7280; }
+                .status-header.initiated { border-top: 4px solid #0ea5e9; }
+                
+                .status-icon {
+                    width: 72px;
+                    height: 72px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 16px;
+                }
+                .status-header.completed .status-icon {
+                    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+                }
+                .status-header.pending .status-icon {
+                    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+                }
+                .status-header.failed .status-icon {
+                    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+                }
+                .status-header.cancelled .status-icon {
+                    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                }
+                .status-header.initiated .status-icon {
+                    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                }
+                
+                .status-icon i {
+                    font-size: 36px;
+                }
+                .status-header.completed .status-icon i { color: #10b981; }
+                .status-header.pending .status-icon i { color: #f59e0b; }
+                .status-header.failed .status-icon i { color: #ef4444; }
+                .status-header.cancelled .status-icon i { color: #6b7280; }
+                .status-header.initiated .status-icon i { color: #0ea5e9; }
+                
+                .status-title {
+                    font-size: 24px;
+                    font-weight: 700;
+                    margin-bottom: 8px;
+                }
+                .status-header.completed .status-title { color: #065f46; }
+                .status-header.pending .status-title { color: #92400e; }
+                .status-header.failed .status-title { color: #991b1b; }
+                .status-header.cancelled .status-title { color: #374151; }
+                .status-header.initiated .status-title { color: #0369a1; }
+                
+                .status-subtitle {
+                    font-size: 14px;
+                    color: #6b7280;
+                }
+                
+                .detail-card {
+                    background: #ffffff;
+                    border-radius: 16px;
+                    padding: 28px;
+                    border: 1px solid #e5e7eb;
+                    margin-bottom: 24px;
+                }
+                
+                .detail-section-title {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    margin-bottom: 20px;
+                    padding-bottom: 12px;
+                    border-bottom: 2px solid #f3f4f6;
+                }
+                
+                .detail-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 14px 0;
+                    border-bottom: 1px solid #f3f4f6;
+                }
+                .detail-item:last-child {
+                    border-bottom: none;
+                }
+                
+                .detail-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 14px;
+                    color: #6b7280;
+                }
+                .detail-label i {
+                    font-size: 18px;
+                    color: #9ca3af;
+                }
+                
+                .detail-value {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                    text-align: right;
+                }
+                
+                .payment-breakdown {
+                    background: #f9fafb;
+                    border-radius: 12px;
+                    padding: 24px;
+                    margin-top: 8px;
+                }
+                
+                .breakdown-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 10px 0;
+                }
+                .breakdown-row.total {
+                    padding-top: 16px;
+                    margin-top: 16px;
+                    border-top: 2px solid #e5e7eb;
+                }
+                
+                .breakdown-label {
+                    font-size: 14px;
+                    color: #6b7280;
+                }
+                .breakdown-row.total .breakdown-label {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #111827;
+                }
+                
+                .breakdown-value {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                }
+                .breakdown-row.total .breakdown-value {
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #2563eb;
+                }
+                
+                .success-box {
+                    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+                    border: 1px solid #10b981;
+                    border-radius: 12px;
+                    padding: 20px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .success-box i {
+                    font-size: 32px;
+                    color: #10b981;
+                }
+                .success-box-content {
+                    flex: 1;
+                }
+                .success-box-title {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #065f46;
+                    margin-bottom: 4px;
+                }
+                .success-box-text {
+                    font-size: 13px;
+                    color: #047857;
+                }
+                
+                .action-buttons {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 12px;
+                }
+            </style>
 
-                    <div class="row mb-4">
-                        <div class="col-md-6 mb-3">
-                            <span class="text-secondary fs-12 d-block">Transaction ID</span>
-                            <span class="fw-medium">{{ transaction.transaction_id }}</span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <span class="text-secondary fs-12 d-block">Date & Time</span>
-                            <span class="fw-medium">{{ transaction.created_at|date:"M d, Y h:i A" }}</span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <span class="text-secondary fs-12 d-block">Payment Gateway</span>
-                            <div class="d-flex align-items-center">
-                                {% if transaction.gateway.logo %}
-                                    <img src="{{ transaction.gateway.logo.url }}" alt="{{ transaction.gateway.name }}" style="max-height: 24px; max-width: 60px; object-fit: contain; margin-right: 8px;">
-                                {% endif %}
-                                <span class="fw-medium">{{ transaction.gateway.name }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <span class="text-secondary fs-12 d-block">Gateway Type</span>
-                            <span class="fw-medium">{{ transaction.gateway.get_gateway_class_display }}</span>
-                        </div>
-                    </div>
+            {% if transaction.status == 'COMPLETED' %}
+            <div class="status-header completed">
+                <div class="status-icon">
+                    <i class="ri-check-double-line"></i>
+                </div>
+                <div class="status-title">Payment Successful</div>
+                <div class="status-subtitle">Your transaction has been completed successfully</div>
+            </div>
+            {% elif transaction.status == 'PENDING' %}
+            <div class="status-header pending">
+                <div class="status-icon">
+                    <i class="ri-time-line"></i>
+                </div>
+                <div class="status-title">Payment Pending</div>
+                <div class="status-subtitle">Your payment is being processed</div>
+            </div>
+            {% elif transaction.status == 'FAILED' %}
+            <div class="status-header failed">
+                <div class="status-icon">
+                    <i class="ri-close-line"></i>
+                </div>
+                <div class="status-title">Payment Failed</div>
+                <div class="status-subtitle">Your transaction could not be completed</div>
+            </div>
+            {% elif transaction.status == 'CANCELLED' %}
+            <div class="status-header cancelled">
+                <div class="status-icon">
+                    <i class="ri-close-circle-line"></i>
+                </div>
+                <div class="status-title">Payment Cancelled</div>
+                <div class="status-subtitle">Your transaction has been cancelled</div>
+            </div>
+            {% elif transaction.status == 'INITIATED' %}
+            <div class="status-header initiated">
+                <div class="status-icon">
+                    <i class="ri-loader-4-line"></i>
+                </div>
+                <div class="status-title">Payment Initiated</div>
+                <div class="status-subtitle">Your payment is being initiated</div>
+            </div>
+            {% endif %}
 
-                    <hr class="my-4">
-
-                    <h5 class="mb-3">Payment Breakdown</h5>
-                    <div class="bg-light rounded-3 p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-secondary">Recharge Amount</span>
-                            <span class="fw-medium">৳ {{ transaction.amount|floatformat:2 }}</span>
+            <!-- Transaction Details -->
+            <div class="detail-card">
+                <div class="detail-section-title">Transaction Information</div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">
+                        <i class="ri-hashtag"></i>
+                        Transaction ID
+                    </span>
+                    <span class="detail-value">{{ transaction.transaction_id }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">
+                        <i class="ri-calendar-line"></i>
+                        Date & Time
+                    </span>
+                    <span class="detail-value">{{ transaction.created_at|date:"M d, Y h:i A" }}</span>
+                </div>
+                
+                {% if transaction.completed_at %}
+                <div class="detail-item">
+                    <span class="detail-label">
+                        <i class="ri-checkbox-circle-line"></i>
+                        Completed At
+                    </span>
+                    <span class="detail-value">{{ transaction.completed_at|date:"M d, Y h:i A" }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="detail-item">
+                    <span class="detail-label">
+                        <i class="ri-secure-payment-line"></i>
+                        Payment Gateway
+                    </span>
+                    <span class="detail-value">
+                        <div class="d-flex align-items-center justify-content-end">
+                            {% if transaction.gateway.logo %}
+                                <img src="{{ transaction.gateway.logo.url }}" alt="{{ transaction.gateway.name }}" style="max-height: 20px; max-width: 50px; object-fit: contain; margin-right: 8px;">
+                            {% endif %}
+                            {{ transaction.gateway.name }}
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-secondary">Gateway Charge ({{ transaction.gateway.tdr }}%)</span>
-                            <span class="fw-medium">৳ {{ transaction.tdr_amount|floatformat:2 }}</span>
-                        </div>
-                        <hr class="my-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-medium">Total Paid</span>
-                            <span class="fs-18 fw-bold text-primary">৳ {{ transaction.total_amount|floatformat:2 }}</span>
-                        </div>
-                    </div>
-
-                    {% if transaction.completed_at %}
-                    <hr class="my-4">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <span class="text-secondary fs-12 d-block">Completed At</span>
-                            <span class="fw-medium">{{ transaction.completed_at|date:"M d, Y h:i A" }}</span>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if transaction.status == 'COMPLETED' %}
-                    <div class="mt-4 p-3 bg-success bg-opacity-10 border-start border-4 border-success rounded">
-                        <div class="d-flex align-items-center">
-                            <i class="ri-check-double-line fs-24 text-success me-2"></i>
-                            <div>
-                                <span class="fw-medium text-success d-block">Payment Successful</span>
-                                <span class="fs-12 text-secondary">Your account balance has been updated.</span>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
+                    </span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">
+                        <i class="ri-bank-card-line"></i>
+                        Gateway Type
+                    </span>
+                    <span class="detail-value">{{ transaction.gateway.get_gateway_class_display }}</span>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between">
+            <!-- Payment Breakdown -->
+            <div class="detail-card">
+                <div class="detail-section-title">Payment Breakdown</div>
+                
+                <div class="payment-breakdown">
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Recharge Amount</span>
+                        <span class="breakdown-value">৳ {{ transaction.amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Gateway Fee ({{ transaction.gateway.tdr }}%)</span>
+                        <span class="breakdown-value">৳ {{ transaction.tdr_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="breakdown-row total">
+                        <span class="breakdown-label">Total Paid</span>
+                        <span class="breakdown-value">৳ {{ transaction.total_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if transaction.status == 'COMPLETED' %}
+            <div class="success-box mb-4">
+                <i class="ri-wallet-3-line"></i>
+                <div class="success-box-content">
+                    <div class="success-box-title">Balance Updated</div>
+                    <div class="success-box-text">Your account balance has been credited with ৳ {{ transaction.amount|floatformat:2 }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="action-buttons">
                 <a href="{% url 'payment_gateway:transactions' %}" class="btn btn-outline-secondary py-2 px-4">
                     <i class="ri-arrow-left-line me-1"></i> Back to Transactions
                 </a>

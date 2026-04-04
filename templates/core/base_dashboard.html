@@ -1,356 +1,357 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-		<link rel="stylesheet" href="{% static 'assets/css/sidebar-menu.css' %}">
-		<link rel="stylesheet" href="{% static 'assets/css/simplebar.css' %}">
-		<link rel="stylesheet" href="{% static 'assets/css/apexcharts.css' %}">
-		<link rel="stylesheet" href="{% static 'assets/css/prism.css' %}">
-		<link rel="stylesheet" href="{% static 'assets/css/rangeslider.css' %}">
-        <link rel="stylesheet" href="{% static 'assets/css/quill.snow.css' %}">
-        <link rel="stylesheet" href="{% static 'assets/css/google-icon.css' %}">
-        <link rel="stylesheet" href="{% static 'assets/css/remixicon.css' %}">
-        <link rel="stylesheet" href="{% static 'assets/css/swiper-bundle.min.css' %}">
-        <link rel="stylesheet" href="{% static 'assets/css/fullcalendar.main.css' %}">
-        <link rel="stylesheet" href="{% static 'assets/css/jsvectormap.min.css' %}">
-        <link rel="stylesheet" href="{% static 'assets/css/lightpick.css' %}">
-		<link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/sidebar-menu.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/simplebar.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/apexcharts.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/prism.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/rangeslider.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/quill.snow.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/google-icon.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/remixicon.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/swiper-bundle.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/fullcalendar.main.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/jsvectormap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/lightpick.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
 
-		<link rel="icon" type="image/png" href="{% static 'assets/images/logo/nanomailer-icon.png' %}">
-		<title>{% block title %}SMS Gateway{% endblock %}</title>
-    </head>
-    <body class="boxed-size">
-        <!-- Start Sidebar Area -->
-        <div class="sidebar-area" id="sidebar-area">
-            <div class="logo position-relative">
-                <a href="{% url 'dashboard' %}" class="d-block text-decoration-none position-relative">
-                    <img src="{% static 'assets/images/logo/nanomailer-logo.png' %}" alt="NanoMailer Logo" class="logo-light" style="max-height: 40px;">
-                    <img src="{% static 'assets/images/logo/nanomailer-logo-light.png' %}" alt="NanoMailer Logo" class="logo-dark d-none" style="max-height: 40px;">
+    <link rel="icon" type="image/png" href="{% static 'assets/images/logo/nanomailer-icon.png' %}">
+    <title>{% block title %}SMS Gateway{% endblock %}</title>
+</head>
+<body class="boxed-size">
+<!-- Start Sidebar Area -->
+<div class="sidebar-area" id="sidebar-area">
+    <div class="logo position-relative">
+        <a href="{% url 'dashboard' %}" class="d-block text-decoration-none position-relative">
+            <img src="{% static 'assets/images/logo/nanomailer-logo.png' %}" alt="NanoMailer Logo" class="logo-light" style="max-height: 40px;">
+            <img src="{% static 'assets/images/logo/nanomailer-logo-light.png' %}" alt="NanoMailer Logo" class="logo-dark d-none" style="max-height: 40px;">
+        </a>
+        <button class="sidebar-burger-menu bg-transparent p-0 border-0 opacity-0 z-n1 position-absolute top-50 end-0 translate-middle-y" id="sidebar-burger-menu">
+            <i data-feather="x"></i>
+        </button>
+    </div>
+
+    <aside id="layout-menu" class="layout-menu menu-vertical menu active" data-simplebar>
+        <ul class="menu-inner">
+            <li class="menu-title small text-uppercase">
+                <span class="menu-title-text">MAIN</span>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'dashboard' %} open{% endif %}">
+                <a href="{% url 'dashboard' %}" class="menu-link{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">dashboard</span>
+                    <span class="title">Dashboard</span>
                 </a>
-                <button class="sidebar-burger-menu bg-transparent p-0 border-0 opacity-0 z-n1 position-absolute top-50 end-0 translate-middle-y" id="sidebar-burger-menu">
-                    <i data-feather="x"></i>
-                </button>
-            </div>
+            </li>
 
-            <aside id="layout-menu" class="layout-menu menu-vertical menu active" data-simplebar>
-                <ul class="menu-inner">
-                    <li class="menu-title small text-uppercase">
-                        <span class="menu-title-text">MAIN</span>
-                    </li>
-                    <li class="menu-item{% if request.resolver_match.url_name == 'dashboard' %} open{% endif %}">
-                        <a href="{% url 'dashboard' %}" class="menu-link{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">dashboard</span>
-                            <span class="title">Dashboard</span>
-                        </a>
-                    </li>
+            <li class="menu-title small text-uppercase">
+                <span class="menu-title-text">SMS</span>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'send_sms' %} open{% endif %}">
+                <a href="{% url 'send_sms' %}" class="menu-link{% if request.resolver_match.url_name == 'send_sms' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">send</span>
+                    <span class="title">Send SMS</span>
+                </a>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'sms_log' %} open{% endif %}">
+                <a href="{% url 'sms_log' %}" class="menu-link{% if request.resolver_match.url_name == 'sms_log' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">history</span>
+                    <span class="title">SMS Log</span>
+                </a>
+            </li>
 
-                    <li class="menu-title small text-uppercase">
-                        <span class="menu-title-text">SMS</span>
+            <li class="menu-title small text-uppercase">
+                <span class="menu-title-text">BILLING</span>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'add_fund' %} open{% endif %}">
+                <a href="{% url 'payment_gateway:add_fund' %}" class="menu-link{% if request.resolver_match.url_name == 'add_fund' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">account_balance_wallet</span>
+                    <span class="title">Add Fund</span>
+                </a>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name in 'transactions,transaction_detail' %} open{% endif %}">
+                <a href="{% url 'payment_gateway:transactions' %}" class="menu-link{% if request.resolver_match.url_name in 'transactions,transaction_detail' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">receipt_long</span>
+                    <span class="title">Transactions</span>
+                </a>
+            </li>
+
+            <li class="menu-title small text-uppercase">
+                <span class="menu-title-text">DEVELOPER</span>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'api_key' %} open{% endif %}">
+                <a href="{% url 'api_key' %}" class="menu-link{% if request.resolver_match.url_name == 'api_key' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">vpn_key</span>
+                    <span class="title">API Key</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link{% if request.resolver_match.url_name == 'api_docs' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">code</span>
+                    <span class="title">API Documentation</span>
+                </a>
+            </li>
+
+            <li class="menu-title small text-uppercase">
+                <span class="menu-title-text">ADMIN</span>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'users' %} open{% endif %}">
+                <a href="{% url 'users' %}" class="menu-link{% if request.resolver_match.url_name == 'users' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">group</span>
+                    <span class="title">Users</span>
+                </a>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} open{% endif %}">
+                <a href="javascript:void(0);" class="menu-link menu-toggle{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">settings</span>
+                    <span class="title">Configuration</span>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item">
+                        <a href="{% url 'sms_rates' %}" class="menu-link{% if request.resolver_match.url_name == 'sms_rates' %} active{% endif %}">SMS Rates</a>
                     </li>
                     <li class="menu-item">
-                        <a href="{% url 'send_sms' %}" class="menu-link{% if request.resolver_match.url_name == 'send_sms' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">send</span>
-                            <span class="title">Send SMS</span>
-                        </a>
+                        <a href="{% url 'provider' %}" class="menu-link{% if request.resolver_match.url_name == 'provider' %} active{% endif %}">Provider</a>
                     </li>
                     <li class="menu-item">
-                        <a href="{% url 'sms_log' %}" class="menu-link{% if request.resolver_match.url_name == 'sms_log' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">history</span>
-                            <span class="title">SMS Log</span>
-                        </a>
-                    </li>
-
-                    <li class="menu-title small text-uppercase">
-                        <span class="menu-title-text">BILLING</span>
+                        <a href="{% url 'sender_id' %}" class="menu-link{% if request.resolver_match.url_name == 'sender_id' %} active{% endif %}">Sender ID</a>
                     </li>
                     <li class="menu-item">
-                        <a href="{% url 'payment_gateway:add_fund' %}" class="menu-link{% if request.resolver_match.url_name == 'add_fund' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">account_balance_wallet</span>
-                            <span class="title">Add Fund</span>
-                        </a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'payment_gateway:transactions' %}" class="menu-link{% if request.resolver_match.url_name == 'transactions' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">receipt_long</span>
-                            <span class="title">Transactions</span>
-                        </a>
-                    </li>
-
-                    <li class="menu-title small text-uppercase">
-                        <span class="menu-title-text">DEVELOPER</span>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'api_key' %}" class="menu-link{% if request.resolver_match.url_name == 'api_key' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">vpn_key</span>
-                            <span class="title">API Key</span>
-                        </a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="#" class="menu-link{% if request.resolver_match.url_name == 'api_docs' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">code</span>
-                            <span class="title">API Documentation</span>
-                        </a>
-                    </li>
-
-                    <li class="menu-title small text-uppercase">
-                        <span class="menu-title-text">ADMIN</span>
-                    </li>
-                    <li class="menu-item{% if request.resolver_match.url_name == 'users' %} open{% endif %}">
-                        <a href="{% url 'users' %}" class="menu-link{% if request.resolver_match.url_name == 'users' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">group</span>
-                            <span class="title">Users</span>
-                        </a>
-                    </li>
-                    <li class="menu-item{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} open{% endif %}">
-                        <a href="javascript:void(0);" class="menu-link menu-toggle{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">settings</span>
-                            <span class="title">Configuration</span>
-                        </a>
-                        <ul class="menu-sub">
-                            <li class="menu-item">
-                                <a href="{% url 'sms_rates' %}" class="menu-link{% if request.resolver_match.url_name == 'sms_rates' %} active{% endif %}">SMS Rates</a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="{% url 'provider' %}" class="menu-link{% if request.resolver_match.url_name == 'provider' %} active{% endif %}">Provider</a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="{% url 'sender_id' %}" class="menu-link{% if request.resolver_match.url_name == 'sender_id' %} active{% endif %}">Sender ID</a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="{% url 'payment_gateway' %}" class="menu-link{% if request.resolver_match.url_name == 'payment_gateway' %} active{% endif %}">Payment Gateway</a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <li class="menu-title small text-uppercase{% if request.resolver_match.url_name in 'profile,change_password' %} open{% endif %}">
-                        <span class="menu-title-text">ACCOUNT</span>
-                    </li>
-                    <li class="menu-item{% if request.resolver_match.url_name == 'profile' %} open{% endif %}">
-                        <a href="{% url 'profile' %}" class="menu-link{% if request.resolver_match.url_name == 'profile' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">person</span>
-                            <span class="title">Profile</span>
-                        </a>
-                    </li>
-                    <li class="menu-item{% if request.resolver_match.url_name == 'change_password' %} open{% endif %}">
-                        <a href="{% url 'change_password' %}" class="menu-link{% if request.resolver_match.url_name == 'change_password' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">lock</span>
-                            <span class="title">Change Password</span>
-                        </a>
-                    </li>
-
-                    <li class="menu-title small text-uppercase">
-                        <span class="menu-title-text">SESSION</span>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'logout' %}" class="menu-link">
-                            <span class="material-symbols-outlined menu-icon">logout</span>
-                            <span class="title">Logout</span>
-                        </a>
+                        <a href="{% url 'payment_gateway' %}" class="menu-link{% if request.resolver_match.url_name == 'payment_gateway' %} active{% endif %}">Payment Gateway</a>
                     </li>
                 </ul>
-            </aside>
-        </div>
-        <!-- End Sidebar Area -->
+            </li>
 
-        <!-- Start Main Content Area -->
-        <div class="container-fluid">
-            <div class="main-content d-flex flex-column">
-                <!-- Start Header Area -->
-                <header class="header-area bg-white mb-4 rounded-bottom-15" id="header-area">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <div class="left-header-content">
-                                <ul class="d-flex align-items-center ps-0 mb-0 list-unstyled justify-content-start">
-                                    <li>
-                                        <button class="header-burger-menu bg-transparent p-0 border-0" id="header-burger-menu">
-                                            <span class="material-symbols-outlined">menu</span>
-                                        </button>
-                                    </li>
-                                    <li class="d-none d-sm-block ms-3">
-                                        <form class="src-form position-relative">
-                                            <input type="text" class="form-control" placeholder="Search here.....">
-                                            <button type="submit" class="src-btn position-absolute top-50 end-0 translate-middle-y bg-transparent p-0 border-0">
-                                                <span class="material-symbols-outlined">search</span>
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+            <li class="menu-title small text-uppercase{% if request.resolver_match.url_name in 'profile,change_password' %} open{% endif %}">
+                <span class="menu-title-text">ACCOUNT</span>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'profile' %} open{% endif %}">
+                <a href="{% url 'profile' %}" class="menu-link{% if request.resolver_match.url_name == 'profile' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">person</span>
+                    <span class="title">Profile</span>
+                </a>
+            </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'change_password' %} open{% endif %}">
+                <a href="{% url 'change_password' %}" class="menu-link{% if request.resolver_match.url_name == 'change_password' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">lock</span>
+                    <span class="title">Change Password</span>
+                </a>
+            </li>
 
-                        <div class="col">
-                            <div class="right-header-content">
-                                <ul class="d-flex align-items-center justify-content-end ps-0 mb-0 list-unstyled">
-                                    <li class="header-right-item d-none d-sm-block" style="top: 0;">
-                                        <div class="bg-success bg-opacity-10 text-success px-3 py-2 rounded-2 fw-semibold fs-14">৳ {{ user_balance|floatformat:2 }}</div>
-                                    </li>
-                                    <li class="header-right-item">
-                                        <div class="light-dark">
-                                            <button class="switch-toggle settings-btn dark-btn p-0 bg-transparent border-0" id="switch-toggle">
-                                                <span class="dark"><i class="material-symbols-outlined">light_mode</i></span>
-                                                <span class="light"><i class="material-symbols-outlined">dark_mode</i></span>
-                                            </button>
-                                        </div>
-                                    </li>
-                                    <li class="header-right-item">
-                                        <div class="dropdown admin-profile">
-                                            <div class="d-xxl-flex align-items-center bg-transparent border-0 text-start p-0 cursor dropdown-toggle" data-bs-toggle="dropdown">
-                                                <div class="flex-shrink-0">
-                                                    {% if user_photo %}
-                                                        <img class="rounded-circle wh-40 administrator" src="{{ user_photo }}" alt="{{ user_full_name }}" style="object-fit: contain;">
-                                                    {% else %}
-                                                        <img class="rounded-circle wh-40 administrator" src="{% static 'assets/images/administrator.jpg' %}" alt="admin" style="object-fit: contain;">
-                                                    {% endif %}
-                                                </div>
-                                                <div class="flex-grow-1 ms-2">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <div class="d-none d-xxl-block">
-                                                            <div class="d-flex align-content-center">
-                                                                <h3>{{ user_full_name|default:'User' }}</h3>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+            <li class="menu-title small text-uppercase">
+                <span class="menu-title-text">SESSION</span>
+            </li>
+            <li class="menu-item">
+                <a href="{% url 'logout' %}" class="menu-link">
+                    <span class="material-symbols-outlined menu-icon">logout</span>
+                    <span class="title">Logout</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+</div>
+<!-- End Sidebar Area -->
 
-                                            <div class="dropdown-menu border-0 bg-white dropdown-menu-end">
-                                                <div class="d-flex align-items-center info">
-                                                    <div class="flex-shrink-0">
-                                                        {% if user_photo %}
-                                                            <img class="rounded-circle wh-30 administrator" src="{{ user_photo }}" alt="{{ user_full_name }}" style="object-fit: contain;">
-                                                        {% else %}
-                                                            <img class="rounded-circle wh-30 administrator" src="{% static 'assets/images/administrator.jpg' %}" alt="admin" style="object-fit: contain;">
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-2">
-                                                        <h3 class="fw-medium">{{ user_full_name|default:'User Name' }}</h3>
-                                                        <span class="fs-12">{{ user_email|default:'User' }}</span>
-                                                    </div>
-                                                </div>
-                                                <ul class="admin-link ps-0 mb-0 list-unstyled">
-                                                    <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="{% url 'profile' %}">
-                                                            <i class="material-symbols-outlined">account_circle</i>
-                                                            <span class="ms-2">My Profile</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="{% url 'logout' %}">
-                                                            <i class="material-symbols-outlined">logout</i>
-                                                            <span class="ms-2">Logout</span>
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+<!-- Start Main Content Area -->
+<div class="container-fluid">
+    <div class="main-content d-flex flex-column">
+        <!-- Start Header Area -->
+        <header class="header-area bg-white mb-4 rounded-bottom-15" id="header-area">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <div class="left-header-content">
+                        <ul class="d-flex align-items-center ps-0 mb-0 list-unstyled justify-content-start">
+                            <li>
+                                <button class="header-burger-menu bg-transparent p-0 border-0" id="header-burger-menu">
+                                    <span class="material-symbols-outlined">menu</span>
+                                </button>
+                            </li>
+                            <li class="d-none d-sm-block ms-3">
+                                <form class="src-form position-relative">
+                                    <input type="text" class="form-control" placeholder="Search here.....">
+                                    <button type="submit" class="src-btn position-absolute top-50 end-0 translate-middle-y bg-transparent p-0 border-0">
+                                        <span class="material-symbols-outlined">search</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
                     </div>
-                </header>
-                <!-- End Header Area -->
+                </div>
 
-                <!-- Main Content -->
-                {% block content %}{% endblock %}
+                <div class="col">
+                    <div class="right-header-content">
+                        <ul class="d-flex align-items-center justify-content-end ps-0 mb-0 list-unstyled">
+                            <li class="header-right-item d-none d-sm-block" style="top: 0;">
+                                <div class="bg-success bg-opacity-10 text-success px-3 py-2 rounded-2 fw-semibold fs-14">৳ {{ user_balance|floatformat:2 }}</div>
+                            </li>
+                            <li class="header-right-item">
+                                <div class="light-dark">
+                                    <button class="switch-toggle settings-btn dark-btn p-0 bg-transparent border-0" id="switch-toggle">
+                                        <span class="dark"><i class="material-symbols-outlined">light_mode</i></span>
+                                        <span class="light"><i class="material-symbols-outlined">dark_mode</i></span>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="header-right-item">
+                                <div class="dropdown admin-profile">
+                                    <div class="d-xxl-flex align-items-center bg-transparent border-0 text-start p-0 cursor dropdown-toggle" data-bs-toggle="dropdown">
+                                        <div class="flex-shrink-0">
+                                            {% if user_photo %}
+                                                <img class="rounded-circle wh-40 administrator" src="{{ user_photo }}" alt="{{ user_full_name }}" style="object-fit: contain;">
+                                            {% else %}
+                                                <img class="rounded-circle wh-40 administrator" src="{% static 'assets/images/administrator.jpg' %}" alt="admin" style="object-fit: contain;">
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1 ms-2">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="d-none d-xxl-block">
+                                                    <div class="d-flex align-content-center">
+                                                        <h3>{{ user_full_name|default:'User' }}</h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-
+                                    <div class="dropdown-menu border-0 bg-white dropdown-menu-end">
+                                        <div class="d-flex align-items-center info">
+                                            <div class="flex-shrink-0">
+                                                {% if user_photo %}
+                                                    <img class="rounded-circle wh-30 administrator" src="{{ user_photo }}" alt="{{ user_full_name }}" style="object-fit: contain;">
+                                                {% else %}
+                                                    <img class="rounded-circle wh-30 administrator" src="{% static 'assets/images/administrator.jpg' %}" alt="admin" style="object-fit: contain;">
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <h3 class="fw-medium">{{ user_full_name|default:'User Name' }}</h3>
+                                                <span class="fs-12">{{ user_email|default:'User' }}</span>
+                                            </div>
+                                        </div>
+                                        <ul class="admin-link ps-0 mb-0 list-unstyled">
+                                            <li>
+                                                <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="{% url 'profile' %}">
+                                                    <i class="material-symbols-outlined">account_circle</i>
+                                                    <span class="ms-2">My Profile</span>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item admin-item-link d-flex align-items-center text-body" href="{% url 'logout' %}">
+                                                    <i class="material-symbols-outlined">logout</i>
+                                                    <span class="ms-2">Logout</span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-        </div>
-        <!-- End Main Content Area -->
+        </header>
+        <!-- End Header Area -->
 
-        <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
-        <script src="{% static 'assets/js/dragdrop.js' %}"></script>
-        <script src="{% static 'assets/js/rangeslider.min.js' %}"></script>
-        <script src="{% static 'assets/js/quill.min.js' %}"></script>
-        <script src="{% static 'assets/js/data-table.js' %}"></script>
-        <script src="{% static 'assets/js/prism.js' %}"></script>
-        <script src="{% static 'assets/js/clipboard.min.js' %}"></script>
-        <script src="{% static 'assets/js/feather.min.js' %}"></script>
-        <script src="{% static 'assets/js/simplebar.min.js' %}"></script>
-        <script src="{% static 'assets/js/apexcharts.min.js' %}"></script>
-        <script src="{% static 'assets/js/echarts.min.js' %}"></script>
-        <script src="{% static 'assets/js/swiper-bundle.min.js' %}"></script>
-        <script src="{% static 'assets/js/fullcalendar.main.js' %}"></script>
-        <script src="{% static 'assets/js/jsvectormap.min.js' %}"></script>
-        <script src="{% static 'assets/js/world-merc.js' %}"></script>
-        <script src="{% static 'assets/js/moment.min.js' %}"></script>
-        <script src="{% static 'assets/js/lightpick.js' %}"></script>
-        <script src="{% static 'assets/js/custom/apexcharts.js' %}"></script>
-        <script src="{% static 'assets/js/custom/echarts.js' %}"></script>
-        <script src="{% static 'assets/js/custom/custom.js' %}"></script>
-        <script>
-            // Logo toggle for dark/light mode
-            function updateLogo() {
-                // Check data-theme attribute (Trezo template uses this)
-                const theme = document.body.getAttribute('data-theme');
-                const isDarkMode = theme === 'dark';
-                
-                const lightLogos = document.querySelectorAll('.logo-light');
-                const darkLogos = document.querySelectorAll('.logo-dark');
-                
-                lightLogos.forEach(logo => {
-                    logo.classList.toggle('d-none', isDarkMode);
-                });
-                darkLogos.forEach(logo => {
-                    logo.classList.toggle('d-none', !isDarkMode);
-                });
+        <!-- Main Content -->
+        {% block content %}{% endblock %}
+
+        <div style="padding: 20px"></div>
+
+    </div>
+</div>
+<!-- End Main Content Area -->
+
+<script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'assets/js/sidebar-menu.js' %}"></script>
+<script src="{% static 'assets/js/dragdrop.js' %}"></script>
+<script src="{% static 'assets/js/rangeslider.min.js' %}"></script>
+<script src="{% static 'assets/js/quill.min.js' %}"></script>
+<script src="{% static 'assets/js/data-table.js' %}"></script>
+<script src="{% static 'assets/js/prism.js' %}"></script>
+<script src="{% static 'assets/js/clipboard.min.js' %}"></script>
+<script src="{% static 'assets/js/feather.min.js' %}"></script>
+<script src="{% static 'assets/js/simplebar.min.js' %}"></script>
+<script src="{% static 'assets/js/apexcharts.min.js' %}"></script>
+<script src="{% static 'assets/js/echarts.min.js' %}"></script>
+<script src="{% static 'assets/js/swiper-bundle.min.js' %}"></script>
+<script src="{% static 'assets/js/fullcalendar.main.js' %}"></script>
+<script src="{% static 'assets/js/jsvectormap.min.js' %}"></script>
+<script src="{% static 'assets/js/world-merc.js' %}"></script>
+<script src="{% static 'assets/js/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/lightpick.js' %}"></script>
+<script src="{% static 'assets/js/custom/apexcharts.js' %}"></script>
+<script src="{% static 'assets/js/custom/echarts.js' %}"></script>
+<script src="{% static 'assets/js/custom/custom.js' %}"></script>
+<script>
+    // Logo toggle for dark/light mode
+    function updateLogo() {
+        // Check data-theme attribute (Trezo template uses this)
+        const theme = document.body.getAttribute('data-theme');
+        const isDarkMode = theme === 'dark';
+
+        const lightLogos = document.querySelectorAll('.logo-light');
+        const darkLogos = document.querySelectorAll('.logo-dark');
+
+        lightLogos.forEach(logo => {
+            logo.classList.toggle('d-none', isDarkMode);
+        });
+        darkLogos.forEach(logo => {
+            logo.classList.toggle('d-none', !isDarkMode);
+        });
+    }
+
+    // Initial check
+    updateLogo();
+
+    // Listen for theme toggle button click
+    document.getElementById('switch-toggle')?.addEventListener('click', function () {
+        setTimeout(updateLogo, 100); // Small delay to let theme switch
+    });
+
+    // Observe data-theme attribute changes
+    const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+            if (mutation.attributeName === 'data-theme') {
+                updateLogo();
             }
-            
-            // Initial check
-            updateLogo();
-            
-            // Listen for theme toggle button click
-            document.getElementById('switch-toggle')?.addEventListener('click', function() {
-                setTimeout(updateLogo, 100); // Small delay to let theme switch
-            });
-            
-            // Observe data-theme attribute changes
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.attributeName === 'data-theme') {
-                        updateLogo();
-                    }
-                });
-            });
-            
-            observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
-            
-            // Auto-scroll sidebar to active menu item on page load
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(function() {
-                    var activeLink = document.querySelector('.menu-link.active');
-                    if (activeLink) {
-                        // Find the simplebar scroll element
-                        var simplebarContent = document.querySelector('.simplebar-content-wrapper');
-                        if (simplebarContent) {
-                            // Get the position of active link relative to the simplebar content
-                            var linkRect = activeLink.getBoundingClientRect();
-                            var contentRect = simplebarContent.getBoundingClientRect();
-                            var currentScroll = simplebarContent.scrollTop;
-                            
-                            // Calculate scroll position to center the active item
-                            var scrollPosition = currentScroll + linkRect.top - contentRect.top - (contentRect.height / 2) + (linkRect.height / 2);
-                            
-                            simplebarContent.scrollTo({
-                                top: Math.max(0, scrollPosition),
-                                behavior: 'smooth'
-                            });
-                        }
-                    }
-                }, 100); // Small delay to ensure SimpleBar is initialized
-            });
+        });
+    });
 
-            // Initialize Bootstrap tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-        </script>
-    </body>
+    observer.observe(document.body, {attributes: true, attributeFilter: ['data-theme']});
+
+    // Auto-scroll sidebar to active menu item on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+            var activeLink = document.querySelector('.menu-link.active');
+            if (activeLink) {
+                // Find the simplebar scroll element
+                var simplebarContent = document.querySelector('.simplebar-content-wrapper');
+                if (simplebarContent) {
+                    // Get the position of active link relative to the simplebar content
+                    var linkRect = activeLink.getBoundingClientRect();
+                    var contentRect = simplebarContent.getBoundingClientRect();
+                    var currentScroll = simplebarContent.scrollTop;
+
+                    // Calculate scroll position to center the active item
+                    var scrollPosition = currentScroll + linkRect.top - contentRect.top - (contentRect.height / 2) + (linkRect.height / 2);
+
+                    simplebarContent.scrollTo({
+                        top: Math.max(0, scrollPosition),
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }, 100); // Small delay to ensure SimpleBar is initialized
+    });
+
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>
+</body>
 </html>

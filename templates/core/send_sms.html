@@ -25,6 +25,24 @@
         </nav>
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success bg-success bg-opacity-10 border-0 text-success d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-error-warning-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card bg-white border-0 rounded-3 mb-4">
@@ -102,48 +120,267 @@
         </div>
         <div class="col-lg-4">
             <!-- Estimated Cost Card -->
-            <div class="card bg-white border-0 rounded-3 mb-4">
-                <div class="card-body p-4">
-                    <h3 class="mb-4">Estimated Cost</h3>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between fs-14 mb-2">
-                            <span class="text-secondary">Recipients:</span>
-                            <span class="fw-medium" id="recipientCount">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between fs-14 mb-2">
-                            <span class="text-secondary">SMS Type:</span>
-                            <span class="fw-medium" id="smsTypeDisplay">Masking</span>
-                        </div>
-                        <div class="d-flex justify-content-between fs-14 mb-2">
-                            <span class="text-secondary">SMS Count:</span>
-                            <span class="fw-medium" id="smsCountDisplay">0</span>
-                        </div>
-                        <hr class="my-2">
-                        <div class="d-flex justify-content-between fs-16">
-                            <span class="fw-medium">Total Cost:</span>
-                            <span class="fw-bold text-success fs-18">৳ <span id="totalCost">0.00</span></span>
-                        </div>
+            <style>
+                .cost-card {
+                    background: #ffffff;
+                    border-radius: 16px;
+                    padding: 24px;
+                    border: 1px solid #e5e7eb;
+                }
+                .cost-card .card-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    margin-bottom: 20px;
+                    padding-bottom: 16px;
+                    border-bottom: 2px solid #f3f4f6;
+                }
+                .cost-card .header-icon {
+                    width: 48px;
+                    height: 48px;
+                    background: #eff6ff;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .cost-card .header-icon i {
+                    font-size: 24px;
+                    color: #2563eb;
+                }
+                .cost-card .header-title {
+                    font-size: 14px;
+                    color: #6b7280;
+                    margin: 0;
+                }
+                .cost-card .total-amount {
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #111827;
+                    margin-top: 4px;
+                }
+                .cost-card .total-amount span {
+                    font-weight: 600;
+                    color: #2563eb;
+                }
+                .cost-breakdown {
+                    background: #f9fafb;
+                    border-radius: 12px;
+                    padding: 16px;
+                }
+                .cost-breakdown-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 10px 0;
+                    border-bottom: 1px solid #e5e7eb;
+                }
+                .cost-breakdown-item:last-child {
+                    border-bottom: none;
+                }
+                .cost-breakdown-item .label {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 13px;
+                    color: #6b7280;
+                }
+                .cost-breakdown-item .label i {
+                    color: #9ca3af;
+                    font-size: 16px;
+                }
+                .cost-breakdown-item .value {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                }
+            </style>
+
+            <div class="cost-card mb-4">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="ri-calculator-line"></i>
+                    </div>
+                    <div>
+                        <div class="header-title">Estimated Cost</div>
+                        <div class="total-amount"><span>৳</span> <span id="totalCost">0.00</span></div>
+                    </div>
+                </div>
+                <div class="cost-breakdown">
+                    <div class="cost-breakdown-item">
+                        <span class="label"><i class="ri-user-line"></i>Recipients</span>
+                        <span class="value" id="recipientCount">0</span>
+                    </div>
+                    <div class="cost-breakdown-item">
+                        <span class="label"><i class="ri-shield-check-line"></i>Type</span>
+                        <span class="value" id="smsTypeDisplay">Masking</span>
+                    </div>
+                    <div class="cost-breakdown-item">
+                        <span class="label"><i class="ri-message-3-line"></i>SMS Count</span>
+                        <span class="value"><span id="smsCountDisplay">0</span> parts</span>
                     </div>
                 </div>
             </div>
 
             <!-- SMS Rates Card -->
-            <div class="card bg-white border-0 rounded-3 mb-4">
-                <div class="card-body p-4">
-                    <h3 class="mb-4">SMS Rates</h3>
-                    <div class="mb-4">
-                        <label class="label text-secondary">Operator-wise (Masking / Non-Masking)</label>
-                        {% for rate in user_rates %}
-                        <div class="d-flex justify-content-between fs-14 mb-2 pb-2 border-bottom">
-                            <span>{{ rate.name }}:</span>
-                            <span class="fw-medium">৳ {{ rate.masking|floatformat:2 }} <span class="text-secondary">/</span> ৳ {{ rate.non_masking|floatformat:2 }}</span>
+            <style>
+                .rates-card {
+                    background: #ffffff;
+                    border-radius: 16px;
+                    padding: 24px;
+                    border: 1px solid #e5e7eb;
+                }
+                .rates-card .card-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    margin-bottom: 20px;
+                    padding-bottom: 16px;
+                    border-bottom: 2px solid #f3f4f6;
+                }
+                .rates-card .header-icon {
+                    width: 44px;
+                    height: 44px;
+                    background: #f0fdf4;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .rates-card .header-icon i {
+                    font-size: 22px;
+                    color: #16a34a;
+                }
+                .rates-card .header-title {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #111827;
+                    margin: 0;
+                }
+                .rates-card .header-subtitle {
+                    font-size: 12px;
+                    color: #6b7280;
+                }
+                .rate-header {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 10px 0;
+                    border-bottom: 2px solid #e5e7eb;
+                    margin-bottom: 8px;
+                }
+                .rate-header-label {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #6b7280;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .rate-header-prices {
+                    display: flex;
+                    gap: 12px;
+                }
+                .rate-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 14px 0;
+                    border-bottom: 1px solid #f3f4f6;
+                    transition: all 0.2s ease;
+                }
+                .rate-item:hover {
+                    background: #f9fafb;
+                    margin: 0 -12px;
+                    padding-left: 12px;
+                    padding-right: 12px;
+                    border-radius: 8px;
+                }
+                .rate-item:last-child {
+                    border-bottom: none;
+                }
+                .rate-operator-name {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #374151;
+                }
+                .rate-prices {
+                    display: flex;
+                    gap: 12px;
+                }
+                .rate-box {
+                    text-align: center;
+                    min-width: 70px;
+                }
+                .rate-box .rate-value {
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #111827;
+                    display: block;
+                }
+                .rate-box .rate-label {
+                    font-size: 10px;
+                    font-weight: 600;
+                    color: #6b7280;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    margin-top: 2px;
+                    display: block;
+                }
+                .rate-box.masking .rate-value {
+                    color: #059669;
+                }
+                .rate-box.non-masking .rate-value {
+                    color: #7c3aed;
+                }
+                .rates-footer {
+                    margin-top: 16px;
+                    padding: 14px;
+                    background: #f0f9ff;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .rates-footer i {
+                    color: #0284c7;
+                    font-size: 18px;
+                }
+                .rates-footer span {
+                    font-size: 12px;
+                    color: #0369a1;
+                    font-weight: 500;
+                }
+            </style>
+
+            <div class="rates-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="ri-price-tag-3-line"></i>
+                    </div>
+                    <div>
+                        <h3 class="header-title">SMS Rates</h3>
+                        <div class="header-subtitle">Per SMS pricing by operator</div>
+                    </div>
+                </div>
+                
+                {% for rate in user_rates %}
+                <div class="rate-item">
+                    <span class="rate-operator-name">{{ rate.name }}</span>
+                    <div class="rate-prices">
+                        <div class="rate-box masking">
+                            <span class="rate-value">৳{{ rate.masking|floatformat:2 }}</span>
+                            <span class="rate-label">Masking</span>
                         </div>
-                        {% endfor %}
+                        <div class="rate-box non-masking">
+                            <span class="rate-value">৳{{ rate.non_masking|floatformat:2 }}</span>
+                            <span class="rate-label">Non-Masking</span>
+                        </div>
                     </div>
-                    <div class="alert bg-primary bg-opacity-10 border-0 text-primary fs-14 mb-0">
-                        <i class="ri-information-line me-1"></i>
-                        Make sure you have sufficient balance before sending SMS.
-                    </div>
+                </div>
+                {% endfor %}
+                
+                <div class="rates-footer">
+                    <i class="ri-information-line"></i>
+                    <span>Ensure sufficient balance before sending SMS</span>
                 </div>
             </div>
         </div>

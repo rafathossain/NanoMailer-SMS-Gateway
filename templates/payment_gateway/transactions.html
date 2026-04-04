@@ -25,120 +25,204 @@
         </nav>
     </div>
 
-    <!-- Summary Cards -->
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success bg-success bg-opacity-10 border-0 text-success d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-error-warning-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <style>
+        .stat-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--card-color) 0%, var(--card-color-light) 100%);
+        }
+        .stat-card.total { --card-color: #6366f1; --card-color-light: #818cf8; }
+        .stat-card.completed { --card-color: #10b981; --card-color-light: #34d399; }
+        .stat-card.pending { --card-color: #f59e0b; --card-color-light: #fbbf24; }
+        .stat-card.count { --card-color: #0ea5e9; --card-color-light: #38bdf8; }
+        
+        .stat-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .stat-card.total .stat-icon-wrapper {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        }
+        .stat-card.completed .stat-icon-wrapper {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+        .stat-card.pending .stat-icon-wrapper {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+        .stat-card.count .stat-icon-wrapper {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+        
+        .stat-icon-wrapper i {
+            font-size: 22px;
+        }
+        .stat-card.total .stat-icon-wrapper i { color: #6366f1; }
+        .stat-card.completed .stat-icon-wrapper i { color: #10b981; }
+        .stat-card.pending .stat-icon-wrapper i { color: #f59e0b; }
+        .stat-card.count .stat-icon-wrapper i { color: #0ea5e9; }
+        
+        .stat-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+        .stat-card.total .stat-value { color: #1e1b4b; }
+        .stat-card.completed .stat-value { color: #064e3b; }
+        .stat-card.pending .stat-value { color: #78350f; }
+        .stat-card.count .stat-value { color: #0c4a6e; }
+        
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+    </style>
+
     <div class="row mb-4">
         <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
-            <div class="card bg-primary bg-opacity-10 border-0 rounded-3">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="fs-12 text-secondary d-block">Total Recharge</span>
-                            <h4 class="fs-20 fw-semibold mb-0 mt-1">৳ {{ total_recharge|default:'0.00' }}</h4>
-                        </div>
-                        <div class="bg-primary bg-opacity-25 rounded-3 p-2">
-                            <i class="ri-wallet-3-line fs-24 text-primary"></i>
-                        </div>
-                    </div>
+            <div class="stat-card total">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-wallet-3-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">৳ {{ total_recharge|default:'0.00' }}</div>
+                    <div class="stat-label">Total Recharge</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
-            <div class="card bg-success bg-opacity-10 border-0 rounded-3">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="fs-12 text-secondary d-block">Completed</span>
-                            <h4 class="fs-20 fw-semibold text-success mb-0 mt-1">৳ {{ total_completed|default:'0.00' }}</h4>
-                        </div>
-                        <div class="bg-success bg-opacity-25 rounded-3 p-2">
-                            <i class="ri-check-double-line fs-24 text-success"></i>
-                        </div>
-                    </div>
+            <div class="stat-card completed">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-check-double-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">৳ {{ total_completed|default:'0.00' }}</div>
+                    <div class="stat-label">Completed</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
-            <div class="card bg-warning bg-opacity-10 border-0 rounded-3">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="fs-12 text-secondary d-block">Pending</span>
-                            <h4 class="fs-20 fw-semibold text-warning mb-0 mt-1">৳ {{ total_pending|default:'0.00' }}</h4>
-                        </div>
-                        <div class="bg-warning bg-opacity-25 rounded-3 p-2">
-                            <i class="ri-time-line fs-24 text-warning"></i>
-                        </div>
-                    </div>
+            <div class="stat-card pending">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-time-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">৳ {{ total_pending|default:'0.00' }}</div>
+                    <div class="stat-label">Pending</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
-            <div class="card bg-info bg-opacity-10 border-0 rounded-3">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="fs-12 text-secondary d-block">Total Transactions</span>
-                            <h4 class="fs-20 fw-semibold text-info mb-0 mt-1">{{ total_count|default:'0' }}</h4>
-                        </div>
-                        <div class="bg-info bg-opacity-25 rounded-3 p-2">
-                            <i class="ri-file-list-3-line fs-24 text-info"></i>
-                        </div>
-                    </div>
+            <div class="stat-card count">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-file-list-3-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ total_count|default:'0' }}</div>
+                    <div class="stat-label">Transactions</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card bg-white border-0 rounded-3 mb-4">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                <div>
-                    <h3 class="mb-0">Recharge History</h3>
-                    <small class="text-secondary">Showing successful transactions only</small>
-                </div>
-                <a href="{% url 'payment_gateway:add_fund' %}" class="btn btn-primary py-2 px-3 fw-medium">
-                    <i class="ri-add-line"></i> Add Fund
-                </a>
+        <div class="card-body p-0">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
+                <h3 class="mb-0">Recharge History</h3>
+                <form method="get">
+                    <select name="status" class="form-select" style="width: 180px; height: 42px;" onchange="this.form.submit()">
+                        <option value="" {% if not request.GET.status %}selected{% endif %}>Successful</option>
+                        <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                        <option value="FAILED" {% if request.GET.status == 'FAILED' %}selected{% endif %}>Failed</option>
+                        <option value="ALL" {% if request.GET.status == 'ALL' %}selected{% endif %}>All Transactions</option>
+                    </select>
+                </form>
             </div>
 
-            <!-- Status Filter -->
-            <div class="d-flex gap-2 mb-4 flex-wrap">
-                <a href="{% url 'payment_gateway:transactions' %}" class="btn btn-sm {% if not request.GET.status %}btn-success{% else %}btn-outline-secondary{% endif %}">
-                    <i class="ri-check-line me-1"></i> Successful
-                </a>
-                <a href="{% url 'payment_gateway:transactions' %}?status=PENDING" class="btn btn-sm {% if request.GET.status == 'PENDING' %}btn-warning{% else %}btn-outline-secondary{% endif %}">
-                    <i class="ri-time-line me-1"></i> Pending
-                </a>
-                <a href="{% url 'payment_gateway:transactions' %}?status=FAILED" class="btn btn-sm {% if request.GET.status == 'FAILED' %}btn-danger{% else %}btn-outline-secondary{% endif %}">
-                    <i class="ri-close-line me-1"></i> Failed
-                </a>
-                <a href="{% url 'payment_gateway:transactions' %}?status=ALL" class="btn btn-sm {% if request.GET.status == 'ALL' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-                    <i class="ri-list-check me-1"></i> All Transactions
-                </a>
-            </div>
-
-            <div class="default-table-area all-products">
+            <div class="default-table-area style-two all-products">
+                <style>
+                    .table-sm td, .table-sm th {
+                        padding: 0.5rem 0.75rem;
+                        white-space: nowrap;
+                    }
+                    .table-sm td:first-child, .table-sm th:first-child {
+                        padding-left: 1.5rem;
+                    }
+                    .table-sm td:last-child, .table-sm th:last-child {
+                        padding-right: 1.5rem;
+                    }
+                </style>
                 <div class="table-responsive">
-                    <table class="table align-middle" id="transactionTable">
+                    <table class="table table-sm align-middle" style="width: 100%;">
                         <thead>
                             <tr>
-                                <th scope="col">Trx ID</th>
-                                <th scope="col">Date & Time</th>
-                                <th scope="col">Gateway</th>
-                                <th scope="col">Amount</th>
-                                <th scope="col">Charge</th>
-                                <th scope="col">Total</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Action</th>
+                                <th>Trx ID</th>
+                                <th>Date & Time</th>
+                                <th>Gateway</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-end">Charge</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for transaction in transactions %}
                             <tr>
-                                <td class="text-body fw-medium">#{{ transaction.transaction_id|truncatechars:20 }}</td>
-                                <td class="text-secondary">
-                                    <span class="d-block fs-14 fw-medium text-body">{{ transaction.created_at|date:"M d, Y" }}</span>
-                                    <span class="fs-12">{{ transaction.created_at|date:"h:i A" }}</span>
+                                <td class="fw-medium">#{{ transaction.transaction_id|truncatechars:20 }}</td>
+                                <td>
+                                    <span class="d-block fs-14 fw-medium">{{ transaction.created_at|date:"M d, Y" }}</span>
+                                    <span class="fs-12 text-secondary">{{ transaction.created_at|date:"h:i A" }}</span>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -154,10 +238,10 @@
                                         <span class="fw-medium">{{ transaction.gateway.name }}</span>
                                     </div>
                                 </td>
-                                <td class="text-secondary fw-medium">৳ {{ transaction.amount|floatformat:2 }}</td>
-                                <td class="text-secondary">৳ {{ transaction.tdr_amount|floatformat:2 }}</td>
-                                <td class="text-body fw-semibold">৳ {{ transaction.total_amount|floatformat:2 }}</td>
-                                <td>
+                                <td class="text-end text-secondary fw-medium">৳ {{ transaction.amount|floatformat:2 }}</td>
+                                <td class="text-end text-secondary">৳ {{ transaction.tdr_amount|floatformat:2 }}</td>
+                                <td class="text-end fw-semibold">৳ {{ transaction.total_amount|floatformat:2 }}</td>
+                                <td class="text-center">
                                     {% if transaction.status == 'COMPLETED' %}
                                     <span class="badge bg-success bg-opacity-10 text-success fs-12">
                                         <i class="ri-check-line me-1"></i>Completed
@@ -184,12 +268,10 @@
                                     </span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-1">
-                                        <a href="{% url 'payment_gateway:transaction_detail' transaction.transaction_id %}" class="ps-0 border-0 bg-transparent lh-1 position-relative top-2 text-decoration-none" data-bs-toggle="tooltip" data-bs-placement="top" title="View Details">
-                                            <i class="material-symbols-outlined fs-16 text-primary">visibility</i>
-                                        </a>
-                                    </div>
+                                <td class="text-end">
+                                    <a href="{% url 'payment_gateway:transaction_detail' transaction.transaction_id %}" class="border-0 bg-transparent text-decoration-none">
+                                        <i class="material-symbols-outlined fs-16 text-primary">visibility</i>
+                                    </a>
                                 </td>
                             </tr>
                             {% empty %}

@@ -5,86 +5,397 @@
 
 {% block content %}
 <div class="main-content-container overflow-hidden">
-    <div class="row">
-        <div class="col-sm-6 col-xxl-3">
-            <div class="card border-0 rounded-3 bg-white mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex">
-                        <div class="flex-grow-1">
-                            <span class="d-block mb-1">Total SMS Sent</span>
-                            <h4 class="fs-20 mb-0">0</h4>
-                        </div>
-                        <div class="flex-shrink-0 ms-3">
-                            <i class="ri-send-plane-line fs-24 text-success for dark-bg d-inline-block text-center rounded-circle" style="width: 60px; height: 60px; line-height: 60px; background-color: #ECF0FF;"></i>
-                        </div>
-                    </div>
+    <!-- Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+            <h3 class="mb-1">Dashboard</h3>
+            <p class="text-secondary mb-0">Welcome back, {{ user.first_name|default:user.username }}!</p>
+        </div>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Dashboard</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success bg-success bg-opacity-10 border-0 text-success d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-error-warning-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <style>
+        .stat-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--card-color) 0%, var(--card-color-light) 100%);
+        }
+        .stat-card.sms { --card-color: #6366f1; --card-color-light: #818cf8; }
+        .stat-card.wallet { --card-color: #10b981; --card-color-light: #34d399; }
+        .stat-card.masking { --card-color: #0ea5e9; --card-color-light: #38bdf8; }
+        .stat-card.non-masking { --card-color: #f43f5e; --card-color-light: #fb7185; }
+        
+        .stat-icon-wrapper {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .stat-card.sms .stat-icon-wrapper {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        }
+        .stat-card.wallet .stat-icon-wrapper {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+        .stat-card.masking .stat-icon-wrapper {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+        .stat-card.non-masking .stat-icon-wrapper {
+            background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+        }
+        
+        .stat-icon-wrapper i {
+            font-size: 26px;
+        }
+        .stat-card.sms .stat-icon-wrapper i { color: #6366f1; }
+        .stat-card.wallet .stat-icon-wrapper i { color: #10b981; }
+        .stat-card.masking .stat-icon-wrapper i { color: #0ea5e9; }
+        .stat-card.non-masking .stat-icon-wrapper i { color: #f43f5e; }
+        
+        .stat-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+        .stat-card.sms .stat-value { color: #1e1b4b; }
+        .stat-card.wallet .stat-value { color: #064e3b; }
+        .stat-card.masking .stat-value { color: #0c4a6e; }
+        .stat-card.non-masking .stat-value { color: #881337; }
+        
+        .stat-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .quick-action-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 28px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .quick-action-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        }
+        .quick-action-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .quick-action-text {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .quick-action-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        .quick-action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .chart-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+        }
+        .chart-card .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chart-card .card-header h5 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+        .chart-card .card-body {
+            padding: 24px;
+        }
+    </style>
+
+    <div class="row mb-4">
+        <div class="col-sm-6 col-xxl-3 mb-3 mb-xxl-0">
+            <div class="stat-card sms">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-send-plane-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ total_sms_sent|default:"0" }}</div>
+                    <div class="stat-label">Total SMS Sent</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3 mb-3 mb-xxl-0">
+            <div class="stat-card wallet">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-wallet-3-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">৳ {{ wallet_balance|default:"0.00" }}</div>
+                    <div class="stat-label">Wallet Balance</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3 mb-3 mb-sm-0">
+            <div class="stat-card masking">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-shield-check-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ masking_sms_count|default:"0" }}</div>
+                    <div class="stat-label">Masking SMS</div>
                 </div>
             </div>
         </div>
         <div class="col-sm-6 col-xxl-3">
-            <div class="card border-0 rounded-3 bg-white mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex">
-                        <div class="flex-grow-1">
-                            <span class="d-block mb-1">Wallet Balance</span>
-                            <h4 class="fs-20 mb-0">৳ 0.00</h4>
-                        </div>
-                        <div class="flex-shrink-0 ms-3">
-                            <i class="ri-wallet-3-line fs-24 text-primary for dark-bg d-inline-block text-center rounded-circle" style="width: 60px; height: 60px; line-height: 60px; background-color: #ECF0FF;"></i>
-                        </div>
-                    </div>
+            <div class="stat-card non-masking">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-message-3-line"></i>
                 </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xxl-3">
-            <div class="card border-0 rounded-3 bg-white mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex">
-                        <div class="flex-grow-1">
-                            <span class="d-block mb-1">Sent (Masking)</span>
-                            <h4 class="fs-20 mb-0">0</h4>
-                        </div>
-                        <div class="flex-shrink-0 ms-3">
-                            <i class="ri-shield-check-line fs-24 text-primary-div for dark-bg d-inline-block text-center rounded-circle" style="width: 60px; height: 60px; line-height: 60px; background-color: #ECF0FF;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xxl-3">
-            <div class="card border-0 rounded-3 bg-white mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex">
-                        <div class="flex-grow-1">
-                            <span class="d-block mb-1">Sent (Non-masking)</span>
-                            <h4 class="fs-20 mb-0">0</h4>
-                        </div>
-                        <div class="flex-shrink-0 ms-3">
-                            <i class="ri-message-3-line fs-24 text-danger for dark-bg d-inline-block text-center rounded-circle" style="width: 60px; height: 60px; line-height: 60px; background-color: #ECF0FF;"></i>
-                        </div>
-                    </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ non_masking_sms_count|default:"0" }}</div>
+                    <div class="stat-label">Non-Masking SMS</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-12">
-            <div class="card border-0 rounded-3 bg-white mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-                        <h3 class="mb-0">SMS Usage Statistics</h3>
-                        <select class="form-select month-select form-control w-135 bg-border-color border-color bg-transparent" aria-label="Default select example">
-                            <option selected>Monthly</option>
-                            <option value="1">Last 90 days</option>
-                            <option value="2">Last 1 year</option>
-                        </select>
-                    </div>
-                    <div class="p-5 text-center text-muted">
-                        <span class="material-symbols-outlined fs-48 mb-2">bar_chart</span>
-                        <p class="mb-0">Chart will appear here once data is available.</p>
-                    </div>
+        <div class="col-lg-8 mb-4 mb-lg-0">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h5><i class="ri-bar-chart-box-line me-2 text-primary"></i>SMS Usage Statistics</h5>
+                    <select class="form-select form-select-sm" style="width: 140px;">
+                        <option selected>This Month</option>
+                        <option>Last 30 Days</option>
+                        <option>Last 90 Days</option>
+                        <option>This Year</option>
+                    </select>
                 </div>
+                <div class="card-body">
+                    {% if has_sms_data %}
+                    <div id="smsChart" style="height: 320px;"></div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <div class="mb-3">
+                            <span class="material-symbols-outlined fs-64 text-secondary opacity-25">bar_chart</span>
+                        </div>
+                        <h5 class="text-secondary mb-2">No Data Available</h5>
+                        <p class="mb-4 text-secondary opacity-75">Start sending SMS to see your usage statistics.</p>
+                        <a href="{% url 'send_sms' %}" class="btn btn-primary">
+                            <i class="ri-send-plane-line me-1"></i> Send Your First SMS
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <!-- Quick Actions Card -->
+            <style>
+                .quick-actions-card {
+                    background: #ffffff;
+                    border-radius: 16px;
+                    border: 1px solid #e5e7eb;
+                    padding: 20px;
+                }
+                .quick-actions-title {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .quick-actions-title i {
+                    color: #f59e0b;
+                }
+                .quick-action-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 14px 16px;
+                    border-radius: 12px;
+                    text-decoration: none;
+                    transition: all 0.2s ease;
+                    margin-bottom: 8px;
+                }
+                .quick-action-item:last-child {
+                    margin-bottom: 0;
+                }
+                .quick-action-item:hover {
+                    background: #f9fafb;
+                }
+                .quick-action-icon {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                .quick-action-item.send .quick-action-icon {
+                    background: #eff6ff;
+                }
+                .quick-action-item.send .quick-action-icon i {
+                    color: #2563eb;
+                }
+                .quick-action-item.log .quick-action-icon {
+                    background: #f3f4f6;
+                }
+                .quick-action-item.log .quick-action-icon i {
+                    color: #6b7280;
+                }
+                .quick-action-item.transaction .quick-action-icon {
+                    background: #f0fdf4;
+                }
+                .quick-action-item.transaction .quick-action-icon i {
+                    color: #16a34a;
+                }
+                .quick-action-content {
+                    flex: 1;
+                }
+                .quick-action-label {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                    margin-bottom: 2px;
+                }
+                .quick-action-desc {
+                    font-size: 12px;
+                    color: #6b7280;
+                }
+                .quick-action-arrow {
+                    color: #9ca3af;
+                    font-size: 18px;
+                }
+                .quick-action-item:hover .quick-action-arrow {
+                    color: #2563eb;
+                    transform: translateX(4px);
+                }
+            </style>
+
+            <div class="quick-actions-card">
+                <div class="quick-actions-title">
+                    <i class="ri-flashlight-fill"></i>
+                    Quick Actions
+                </div>
+                <a href="{% url 'send_sms' %}" class="quick-action-item send">
+                    <div class="quick-action-icon">
+                        <i class="ri-send-plane-fill fs-20"></i>
+                    </div>
+                    <div class="quick-action-content">
+                        <div class="quick-action-label">Send SMS</div>
+                        <div class="quick-action-desc">Send message to recipients</div>
+                    </div>
+                    <i class="ri-arrow-right-s-line quick-action-arrow"></i>
+                </a>
+                <a href="{% url 'sms_log' %}" class="quick-action-item log">
+                    <div class="quick-action-icon">
+                        <i class="ri-history-fill fs-20"></i>
+                    </div>
+                    <div class="quick-action-content">
+                        <div class="quick-action-label">SMS History</div>
+                        <div class="quick-action-desc">View delivery reports</div>
+                    </div>
+                    <i class="ri-arrow-right-s-line quick-action-arrow"></i>
+                </a>
+                <a href="{% url 'payment_gateway:transactions' %}" class="quick-action-item transaction">
+                    <div class="quick-action-icon">
+                        <i class="ri-receipt-fill fs-20"></i>
+                    </div>
+                    <div class="quick-action-content">
+                        <div class="quick-action-label">Transactions</div>
+                        <div class="quick-action-desc">View recharge history</div>
+                    </div>
+                    <i class="ri-arrow-right-s-line quick-action-arrow"></i>
+                </a>
             </div>
         </div>
     </div>
