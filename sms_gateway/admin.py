@@ -11,7 +11,7 @@ class SMSLogAdmin(admin.ModelAdmin):
     list_filter = ('status', 'provider', 'created_at')
     search_fields = ('recipient', 'message', 'message_id')
     readonly_fields = ('created_at', 'updated_at', 'delivered_at')
-    date_hierarchy = 'created_at'
+    # date_hierarchy removed to avoid MySQL timezone conversion issues
 
 
 @admin.register(SMSQueue)

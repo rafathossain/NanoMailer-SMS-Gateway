@@ -21,7 +21,7 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('nm@dmin/', admin.site.urls),
     path('', RedirectView.as_view(url='/dashboard', permanent=False)),
     path('', include('authentication.urls')),
     path('', include('core.urls')),

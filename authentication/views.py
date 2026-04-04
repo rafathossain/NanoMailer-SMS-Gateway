@@ -4,7 +4,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.conf import settings
-from core.models import Profile, validate_bd_mobile_number
+from core.models import Profile, validate_bd_mobile_number, DefaultRate, SMSProvider, SenderID, UserSenderID
+from sms_gateway.models import UserSMSRate
 import requests
 import re
 
@@ -113,11 +114,14 @@ def signup_view(request):
             user.save()
 
             # Create user profile with default balance of 5 BDT
-            Profile.objects.create(
+            profile = Profile.objects.create(
                 user=user,
                 mobile_number=mobile,
                 balance=5.00
             )
+
+            # Set up user with default rates, provider, and sender ID
+            setup_new_user(user, profile)
 
             messages.success(request, 'Registration successful! Please log in to continue.')
             return redirect('signin')
@@ -171,3 +175,63 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
     return redirect('signin')
+
+
+def setup_new_user(user, profile):
+    """
+    Set up a new user with default rates, provider, and sender ID.
+    Called automatically after user registration.
+    """
+    # Get default rates
+    default_rate = DefaultRate.get_instance()
+    
+    # Operator mapping: code -> database operator name
+    operators = {
+        'gp': 'grameenphone',
+        'bl': 'banglalink',
+        'robi': 'robi',
+        'airtel': 'airtel',
+        'teletalk': 'teletalk',
+    }
+    
+    # Create user SMS rates from default rates
+    if default_rate and default_rate.operator_rates:
+        for op_code, db_op_name in operators.items():
+            op_rates = default_rate.operator_rates.get(op_code, {})
+            
+            # Masking rate
+            masking_rate = op_rates.get('masking')
+            if masking_rate:
+                UserSMSRate.objects.create(
+                    user=user,
+                    operator=db_op_name,
+                    message_type='masking',
+                    rate=float(masking_rate),
+                    is_active=True
+                )
+            
+            # Non-masking rate
+            non_masking_rate = op_rates.get('non_masking')
+            if non_masking_rate:
+                UserSMSRate.objects.create(
+                    user=user,
+                    operator=db_op_name,
+                    message_type='non_masking',
+                    rate=float(non_masking_rate),
+                    is_active=True
+                )
+    
+    # Assign default provider to user
+    default_provider = SMSProvider.get_default_provider()
+    if default_provider:
+        profile.default_provider = default_provider
+        profile.save(update_fields=['default_provider'])
+        
+        # Assign first sender ID from default provider to user
+        sender_id = SenderID.objects.filter(provider=default_provider).first()
+        if sender_id:
+            UserSenderID.objects.create(
+                user=user,
+                sender_id=sender_id,
+                is_active=True
+            )
