@@ -35,6 +35,11 @@ TEST_MODE = os.getenv('TEST_MODE', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
+# CSRF Trusted Origins
+# https://docs.djangoproject.com/en/6.0/ref/settings/#csrf-trusted-origins
+csrf_trusted_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://sms.nanomailer.com')
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_trusted_origins.split(',') if origin.strip()]
+
 # Application definition
 
 INSTALLED_APPS = [
