@@ -16,4 +16,5 @@ urlpatterns = [
     path('account/change-password', views.change_password_view, name='change_password'),
     path('users', views.users_view, name='users'),
     path('users/<int:user_id>/sms-rates', views.user_sms_rates_view, name='user_sms_rates'),
+    path('admin/sms-log', views.admin_sms_log_view, name='admin_sms_log'),
 ]

@@ -111,6 +111,12 @@
                     <span class="title">Users</span>
                 </a>
             </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'admin_sms_log' %} open{% endif %}">
+                <a href="{% url 'admin_sms_log' %}" class="menu-link{% if request.resolver_match.url_name == 'admin_sms_log' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">history</span>
+                    <span class="title">SMS Log</span>
+                </a>
+            </li>
             <li class="menu-item{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} open{% endif %}">
                 <a href="javascript:void(0);" class="menu-link menu-toggle{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} active{% endif %}">
                     <span class="material-symbols-outlined menu-icon">settings</span>
@@ -235,7 +241,6 @@
                                             </div>
                                             <div class="flex-grow-1 ms-2">
                                                 <h3 class="fw-medium">{{ user_full_name|default:'User Name' }}</h3>
-                                                <span class="fs-12">{{ user_email|default:'User' }}</span>
                                             </div>
                                         </div>
                                         <ul class="admin-link ps-0 mb-0 list-unstyled">

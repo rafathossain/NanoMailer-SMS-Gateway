@@ -1027,3 +1027,51 @@ def user_sms_rates_view(request, user_id):
         'user_provider': user_provider,
     }
     return render(request, 'core/user_sms_rates.html', context)
+
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_sms_log_view(request):
+    """Admin SMS Log view - shows all SMS logs with user filter."""
+    from sms_gateway.models import SMSLog
+    from django.contrib.auth.models import User
+    
+    # Get all users for the dropdown
+    users = User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username')
+    
+    # Get selected user_id from query params
+    selected_user_id = request.GET.get('user_id')
+    selected_user = None
+    sms_logs = SMSLog.objects.none()  # Empty by default
+    
+    # Calculate stats (empty by default)
+    total_sms = 0
+    delivered_count = 0
+    pending_count = 0
+    failed_count = 0
+    
+    if selected_user_id:
+        try:
+            selected_user = User.objects.get(id=selected_user_id)
+            sms_logs = SMSLog.objects.filter(user=selected_user).order_by('-created_at')
+            
+            # Calculate stats
+            total_sms = sms_logs.count()
+            delivered_count = sms_logs.filter(status__in=['DELIVERED', 'SENT']).count()
+            pending_count = sms_logs.filter(status__in=['PENDING', 'QUEUED']).count()
+            failed_count = sms_logs.filter(status='FAILED').count()
+        except User.DoesNotExist:
+            messages.error(request, 'User not found.')
+    
+    context = {
+        'users': users,
+        'selected_user': selected_user,
+        'selected_user_id': selected_user_id,
+        'sms_logs': sms_logs,
+        'total_sms': total_sms,
+        'delivered_count': delivered_count,
+        'pending_count': pending_count,
+        'failed_count': failed_count,
+    }
+    return render(request, 'core/admin_sms_log.html', context)

@@ -1,0 +1,496 @@
+{% extends 'core/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Admin SMS Log - SMS Gateway{% endblock %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Admin SMS Log</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Admin</span>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">SMS Log</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success bg-success bg-opacity-10 border-0 text-success d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-error-warning-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <!-- User Selection Card -->
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-4">
+            <form method="get" action="{% url 'admin_sms_log' %}" class="row align-items-end g-3">
+                <div class="col-md-6 col-lg-4">
+                    <label for="user_id" class="form-label fw-medium">Select User</label>
+                    <select name="user_id" id="user_id" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Select a user --</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}" {% if selected_user_id == u.id|stringformat:"s" %}selected{% endif %}>
+                            {{ u.get_full_name|default:u.username }} ({{ u.email }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary text-white">
+                        <i class="ri-filter-search-line me-1"></i> View SMS Logs
+                    </button>
+                    {% if selected_user %}
+                    <a href="{% url 'admin_sms_log' %}" class="btn btn-secondary">
+                        <i class="ri-close-line me-1"></i> Clear
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_user %}
+    <!-- Selected User Info -->
+    <div class="alert alert-info bg-info bg-opacity-10 border-0 mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="ri-user-line fs-18 me-2"></i>
+            <div>
+                <strong>Viewing SMS logs for:</strong> 
+                {{ selected_user.get_full_name|default:selected_user.username }} 
+                <span class="text-secondary">({{ selected_user.email }})</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <style>
+        .stat-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        [data-theme=dark] .stat-card {
+            background: #0C1427 !important;
+            border-color: #172036 !important;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--card-color) 0%, var(--card-color-light) 100%);
+        }
+        .stat-card.total { --card-color: #2563eb; --card-color-light: #60a5fa; }
+        .stat-card.delivered { --card-color: #10b981; --card-color-light: #34d399; }
+        .stat-card.pending { --card-color: #f59e0b; --card-color-light: #fbbf24; }
+        .stat-card.failed { --card-color: #ef4444; --card-color-light: #f87171; }
+        
+        .stat-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .stat-card.total .stat-icon-wrapper {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+        .stat-card.delivered .stat-icon-wrapper {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+        .stat-card.pending .stat-icon-wrapper {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+        .stat-card.failed .stat-icon-wrapper {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+        
+        .stat-icon-wrapper i {
+            font-size: 22px;
+        }
+        .stat-card.total .stat-icon-wrapper i { color: #2563eb; }
+        .stat-card.delivered .stat-icon-wrapper i { color: #10b981; }
+        .stat-card.pending .stat-icon-wrapper i { color: #f59e0b; }
+        .stat-card.failed .stat-icon-wrapper i { color: #ef4444; }
+        
+        .stat-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+        .stat-card.total .stat-value { color: #2563eb; }
+        [data-theme=dark] .stat-card.total .stat-value { color: #60a5fa; }
+        .stat-card.delivered .stat-value { color: #10b981; }
+        [data-theme=dark] .stat-card.delivered .stat-value { color: #34d399; }
+        .stat-card.pending .stat-value { color: #f59e0b; }
+        [data-theme=dark] .stat-card.pending .stat-value { color: #fbbf24; }
+        .stat-card.failed .stat-value { color: #ef4444; }
+        [data-theme=dark] .stat-card.failed .stat-value { color: #f87171; }
+        
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+        [data-theme=dark] .stat-label {
+            color: #8695AA !important;
+        }
+        
+        /* SMS Details Modal Dark Mode */
+        [data-theme=dark] #smsDetailsContent {
+            background-color: #0C1427 !important;
+            color: #fff;
+        }
+        [data-theme=dark] #smsDetailsContent .table {
+            color: #fff;
+            background-color: #0C1427 !important;
+        }
+        [data-theme=dark] #smsDetailsContent tbody {
+            background-color: #0C1427 !important;
+        }
+        [data-theme=dark] #smsDetailsContent tr {
+            background-color: #0C1427 !important;
+        }
+        [data-theme=dark] #smsDetailsContent td {
+            color: #fff;
+            background-color: #0C1427 !important;
+            border-color: #172036 !important;
+        }
+        [data-theme=dark] #smsDetailsContent .text-secondary {
+            color: #8695AA !important;
+        }
+        [data-theme=dark] #smsDetailsContent .border-bottom {
+            border-color: #172036 !important;
+        }
+    </style>
+
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+            <div class="stat-card total">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-message-3-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ total_sms|default:"0" }}</div>
+                    <div class="stat-label">Total SMS</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+            <div class="stat-card delivered">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-check-double-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ delivered_count|default:"0" }}</div>
+                    <div class="stat-label">Delivered/Sent</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+            <div class="stat-card pending">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-time-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ pending_count|default:"0" }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card failed">
+                <div class="stat-icon-wrapper">
+                    <i class="ri-close-circle-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ failed_count|default:"0" }}</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-0">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
+                <h3 class="mb-0">SMS History</h3>
+            </div>
+
+            <div class="default-table-area style-two all-products">
+                <style>
+                    .table-sm td, .table-sm th {
+                        padding: 0.25rem 0.5rem;
+                        white-space: nowrap;
+                    }
+                    .table-sm td:first-child, .table-sm th:first-child {
+                        padding-left: 1rem;
+                    }
+                    .table-sm td:last-child, .table-sm th:last-child {
+                        padding-right: 1rem;
+                    }
+                    .table-sm td:nth-child(4) {
+                        white-space: normal;
+                        max-width: 300px;
+                    }
+                </style>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Sender ID</th>
+                                <th>Recipient</th>
+                                <th>Message</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Cost</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in sms_logs %}
+                            <tr>
+                                <td>
+                                    <span class="d-block fs-14 fw-medium">{{ log.created_at|date:"M d, Y" }}</span>
+                                    <span class="fs-12 text-secondary">{{ log.created_at|date:"h:i A" }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary">{{ log.sender_id }}</span>
+                                </td>
+                                <td class="text-secondary">{{ log.recipient }}</td>
+                                <td class="text-secondary">{{ log.message|truncatechars:80 }}</td>
+                                <td class="text-center">
+                                    {% if log.status == 'DELIVERED' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success fs-12">
+                                        <i class="ri-check-line me-1"></i>Delivered
+                                    </span>
+                                    {% elif log.status == 'SENT' %}
+                                    <span class="badge bg-info bg-opacity-10 text-info fs-12">
+                                        <i class="ri-check-line me-1"></i>Sent
+                                    </span>
+                                    {% elif log.status == 'QUEUED' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary fs-12">
+                                        <i class="ri-time-line me-1"></i>Queued
+                                    </span>
+                                    {% elif log.status == 'PENDING' %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning fs-12">
+                                        <i class="ri-time-line me-1"></i>Pending
+                                    </span>
+                                    {% elif log.status == 'FAILED' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger fs-12">
+                                        <i class="ri-close-line me-1"></i>Failed
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary fs-12">
+                                        {{ log.status|title }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-secondary text-end fw-medium">৳ {{ log.cost|floatformat:2 }}</td>
+                                <td class="text-end">
+                                    <div class="d-flex align-items-center justify-content-end gap-1">
+                                        <button class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" onclick="viewSMSDetails({{ log.id }})" title="View">
+                                            <i class="material-symbols-outlined fs-16 text-primary">visibility</i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-secondary">
+                                    <i class="ri-inbox-line fs-24 mb-2 d-block"></i>
+                                    No SMS logs found for this user.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- No user selected state -->
+    <div class="card bg-white border-0 rounded-3">
+        <div class="card-body p-5 text-center">
+            <div class="mb-3">
+                <i class="ri-user-search-line fs-48 text-secondary opacity-50"></i>
+            </div>
+            <h5 class="text-secondary mb-2">No User Selected</h5>
+            <p class="text-secondary mb-0">Please select a user from the dropdown above to view their SMS logs.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- View SMS Details Modal -->
+<div class="modal fade" id="viewSMSModal" tabindex="-1" aria-labelledby="viewSMSModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="viewSMSModalLabel">SMS Details</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="smsDetailsContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewSMSDetails(logId) {
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('viewSMSModal'));
+        modal.show();
+        
+        // Fetch SMS details via AJAX
+        fetch(`/sms/api/sms-log/${logId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to load SMS details');
+                }
+                
+                const content = document.getElementById('smsDetailsContent');
+                
+                // Format operator name
+                const operatorNames = {
+                    'grameenphone': 'Grameenphone',
+                    'banglalink': 'Banglalink',
+                    'robi': 'Robi',
+                    'airtel': 'Airtel',
+                    'teletalk': 'Teletalk',
+                    'unknown': 'Unknown'
+                };
+                const operatorName = operatorNames[data.operator] || data.operator;
+                
+                // Status badge
+                const statusBadge = `<span class="badge bg-${data.status === 'DELIVERED' ? 'success' : data.status === 'SENT' ? 'info' : data.status === 'QUEUED' ? 'primary' : data.status === 'PENDING' ? 'warning' : 'danger'} bg-opacity-10 text-${data.status === 'DELIVERED' ? 'success' : data.status === 'SENT' ? 'info' : data.status === 'QUEUED' ? 'primary' : data.status === 'PENDING' ? 'warning' : 'danger'} fs-12">${data.status.charAt(0) + data.status.slice(1).toLowerCase()}</span>`;
+                
+                // Build failure reason row for failed SMS
+                let failureReasonRow = '';
+                if (data.status === 'FAILED') {
+                    const failureReason = data.error_message || 'Unknown error occurred';
+                    failureReasonRow = `
+                        <tr class="border-bottom bg-danger bg-opacity-10">
+                            <td class="fw-medium text-danger" style="width: 35%;"><i class="ri-error-warning-line me-1"></i>Failure Reason</td>
+                            <td class="text-danger fw-medium">${failureReason}</td>
+                        </tr>
+                    `;
+                }
+                
+                content.innerHTML = `
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary" style="width: 35%;">Log ID</td>
+                                <td>#${data.id}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Recipient</td>
+                                <td class="fw-medium">${data.recipient}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Sender ID</td>
+                                <td><span class="badge bg-primary bg-opacity-10 text-primary">${data.sender_id}</span></td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">SMS Type</td>
+                                <td><span class="badge bg-${data.message_type === 'masking' ? 'success' : 'warning'} bg-opacity-10 text-${data.message_type === 'masking' ? 'success' : 'warning'}">${data.message_type === 'masking' ? 'Masking' : 'Non-Masking'}</span></td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Operator</td>
+                                <td>${operatorName}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Message</td>
+                                <td style="white-space: pre-wrap;">${data.message}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Status</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                            ${failureReasonRow}
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Segments</td>
+                                <td>${data.segments} SMS</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Cost</td>
+                                <td class="fw-medium">৳ ${data.cost} <span class="text-secondary fs-12">(৳ ${data.rate_per_sms}/SMS)</span></td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Balance Deducted</td>
+                                <td>${data.balance_deducted ? '<span class="text-success"><i class="ri-check-line"></i> Yes (৳ ' + data.deducted_amount + ')</span>' : '<span class="text-secondary"><i class="ri-close-line"></i> No</span>'}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-secondary">Sent At</td>
+                                <td>${data.created_at}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+            })
+            .catch(error => {
+                document.getElementById('smsDetailsContent').innerHTML = `
+                    <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger" role="alert">
+                        <i class="ri-error-warning-line fs-18 me-2"></i>
+                        Failed to load SMS details: ${error.message}
+                    </div>
+                `;
+            });
+    }
+</script>
+{% endblock %}
