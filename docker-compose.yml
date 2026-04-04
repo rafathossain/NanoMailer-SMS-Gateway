@@ -1,0 +1,40 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: sms-gateway-redis
+    restart: unless-stopped
+    volumes:
+      - ./redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: sms-gateway-web
+    restart: unless-stopped
+    command: /app/start-app.sh
+    ports:
+      - "127.0.0.1:18601:8001"
+    volumes:
+      - ./app:/app/app
+    env_file:
+      - ./app/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  celery:
+    build: .
+    container_name: sms-gateway-celery
+    restart: unless-stopped
+    command: /app/start-celery.sh
+    volumes:
+      - ./app:/app/app
+    env_file:
+      - ./app/.env
+    depends_on:
+      redis:
+        condition: service_healthy
