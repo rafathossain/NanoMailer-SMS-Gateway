@@ -92,6 +92,16 @@ class Profile(models.Model):
         help_text='Custom non-masking SMS rate (per SMS). Leave empty to use provider default.'
     )
     
+    # Default SMS provider for this user
+    default_provider = models.ForeignKey(
+        'SMSProvider',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_users',
+        help_text='Default SMS provider for this user. If not set, system default will be used.'
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

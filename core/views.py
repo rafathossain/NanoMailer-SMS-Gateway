@@ -413,8 +413,61 @@ def payment_gateway_view(request):
 
 
 @login_required
+@login_required
 def send_sms_view(request):
-    return render(request, 'core/send_sms.html')
+    """Send SMS view with user's assigned sender IDs and rates"""
+    from sms_gateway.models import UserSMSRate
+    
+    # Get user's assigned sender IDs
+    user_sender_ids = UserSenderID.objects.select_related('sender_id', 'sender_id__provider').filter(
+        user=request.user, 
+        is_active=True
+    ).order_by('-created_at')
+    
+    # Get default rates
+    default_rate = DefaultRate.get_instance()
+    
+    # Operators
+    operators = {
+        'gp': 'Grameenphone',
+        'bl': 'Banglalink',
+        'robi': 'Robi',
+        'airtel': 'Airtel',
+        'teletalk': 'Teletalk',
+    }
+    
+    # Build user rates
+    user_rates = []
+    for op_code, op_name in operators.items():
+        user_op_code = op_code if op_code in ['robi', 'airtel', 'teletalk'] else ('grameenphone' if op_code == 'gp' else 'banglalink')
+        
+        # Get default rates
+        default_op_rates = default_rate.operator_rates.get(op_code, {})
+        default_masking = default_op_rates.get('masking', 0.35)
+        default_non_masking = default_op_rates.get('non_masking', 0.25)
+        
+        # Get user rates
+        try:
+            user_masking = UserSMSRate.objects.get(user=request.user, operator=user_op_code, message_type='masking', is_active=True).rate
+        except UserSMSRate.DoesNotExist:
+            user_masking = default_masking
+        
+        try:
+            user_non_masking = UserSMSRate.objects.get(user=request.user, operator=user_op_code, message_type='non_masking', is_active=True).rate
+        except UserSMSRate.DoesNotExist:
+            user_non_masking = default_non_masking
+        
+        user_rates.append({
+            'name': op_name,
+            'masking': user_masking,
+            'non_masking': user_non_masking,
+        })
+    
+    context = {
+        'user_sender_ids': user_sender_ids,
+        'user_rates': user_rates,
+    }
+    return render(request, 'core/send_sms.html', context)
 
 
 @login_required
@@ -704,6 +757,27 @@ def user_sms_rates_view(request, user_id):
             except UserSenderID.DoesNotExist:
                 messages.error(request, 'Assignment not found.')
             return redirect('user_sms_rates', user_id=user.id)
+        
+        elif action == 'assign_provider':
+            provider_id = request.POST.get('provider_id')
+            try:
+                provider = SMSProvider.objects.get(id=provider_id)
+                user.profile.default_provider = provider
+                user.profile.save()
+                messages.success(request, f'Provider "{provider.name}" assigned to user.')
+            except SMSProvider.DoesNotExist:
+                messages.error(request, 'Provider not found.')
+            return redirect('user_sms_rates', user_id=user.id)
+        
+        elif action == 'remove_provider':
+            if user.profile.default_provider:
+                provider_name = user.profile.default_provider.name
+                user.profile.default_provider = None
+                user.profile.save()
+                messages.success(request, f'Provider "{provider_name}" removed from user.')
+            else:
+                messages.warning(request, 'No provider assigned to this user.')
+            return redirect('user_sms_rates', user_id=user.id)
     
     # Build rates for template
     rates = []
@@ -740,11 +814,19 @@ def user_sms_rates_view(request, user_id):
     # Get IDs of already assigned sender IDs to exclude from modal
     assigned_sender_id_ids = list(user_sender_ids.values_list('sender_id_id', flat=True))
     
+    # Get all providers for provider assignment
+    all_providers = SMSProvider.objects.all().order_by('-created_at')
+    
+    # Get user's assigned provider
+    user_provider = user.profile.default_provider
+    
     context = {
         'target_user': user,
         'rates': rates,
         'all_sender_ids': all_sender_ids,
         'user_sender_ids': user_sender_ids,
         'assigned_sender_id_ids': assigned_sender_id_ids,
+        'all_providers': all_providers,
+        'user_provider': user_provider,
     }
     return render(request, 'core/user_sms_rates.html', context)

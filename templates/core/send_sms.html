@@ -31,19 +31,20 @@
                 <div class="card-body p-4">
                     <h3 class="mb-4">Compose Message</h3>
                     
-                    <form>
+                    <form method="POST" action="{% url 'send_sms' %}">
+                        {% csrf_token %}
                         <div class="row">
                             <div class="col-12">
                                 <div class="form-group mb-4">
-                                    <label class="label text-secondary">Recipient Number</label>
-                                    <input type="tel" class="form-control h-55" placeholder="01XXXXXXXXX" pattern="01[3-9][0-9]{8}" maxlength="11">
-                                    <span class="fs-12 text-secondary mt-1 d-block">Enter 11-digit Bangladeshi mobile number</span>
+                                    <label class="label text-secondary">Recipient Number(s)</label>
+                                    <input type="tel" name="recipient" class="form-control h-55" placeholder="01XXXXXXXXX, 01XXXXXXXXX, ..." pattern="01[3-9][0-9]{8}(,\s*01[3-9][0-9]{8})*" maxlength="1000">
+                                    <span class="fs-12 text-secondary mt-1 d-block">Enter 11-digit Bangladeshi mobile number(s), comma separated for multiple</span>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="form-group mb-4">
                                     <label class="label text-secondary">SMS Type</label>
-                                    <select class="form-select form-control h-55" aria-label="SMS Type">
+                                    <select class="form-select form-control h-55" aria-label="SMS Type" name="sms_type">
                                         <option value="masking">Masking</option>
                                         <option value="non-masking">Non-Masking</option>
                                     </select>
@@ -52,18 +53,26 @@
                             <div class="col-12">
                                 <div class="form-group mb-4">
                                     <label class="label text-secondary">Sender ID</label>
-                                    <select class="form-select form-control h-55" aria-label="Sender ID">
-                                        <option selected>Select Sender ID</option>
-                                        <option value="sms-gw">SMS-GW</option>
-                                        <option value="mybrand">MyBrand</option>
-                                        <option value="bd-sms">BD-SMS</option>
+                                    <select class="form-select form-control h-55" aria-label="Sender ID" name="sender_id">
+                                        {% if user_sender_ids %}
+                                            {% for user_sender_id in user_sender_ids %}
+                                            <option value="{{ user_sender_id.sender_id.sender_id }}">{{ user_sender_id.sender_id.sender_id }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            <option selected disabled>No sender IDs assigned</option>
+                                        {% endif %}
                                     </select>
+                                    {% if not user_sender_ids %}
+                                    <span class="fs-12 text-warning mt-1 d-block">
+                                        <i class="ri-alert-line me-1"></i>Contact admin to assign sender IDs
+                                    </span>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="form-group mb-4">
                                     <label class="label text-secondary">Message</label>
-                                    <textarea id="message" rows="6" class="form-control" placeholder="Type your message here..."></textarea>
+                                    <textarea id="message" name="message" rows="6" class="form-control" placeholder="Type your message here..."></textarea>
                                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
                                         <span class="fs-12 text-secondary">
                                             <span id="charCount">0</span> characters | 
@@ -92,23 +101,44 @@
             </div>
         </div>
         <div class="col-lg-4">
+            <!-- Estimated Cost Card -->
             <div class="card bg-white border-0 rounded-3 mb-4">
                 <div class="card-body p-4">
-                    <h3 class="mb-4">Quick Info</h3>
-                    <div class="mb-4">
-                        <label class="label text-secondary">Your Balance</label>
-                        <h4 class="fs-20 text-success mb-0">৳ 0.00</h4>
+                    <h3 class="mb-4">Estimated Cost</h3>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between fs-14 mb-2">
+                            <span class="text-secondary">Recipients:</span>
+                            <span class="fw-medium" id="recipientCount">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between fs-14 mb-2">
+                            <span class="text-secondary">SMS Type:</span>
+                            <span class="fw-medium" id="smsTypeDisplay">Masking</span>
+                        </div>
+                        <div class="d-flex justify-content-between fs-14 mb-2">
+                            <span class="text-secondary">SMS Count:</span>
+                            <span class="fw-medium" id="smsCountDisplay">0</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fs-16">
+                            <span class="fw-medium">Total Cost:</span>
+                            <span class="fw-bold text-success fs-18">৳ <span id="totalCost">0.00</span></span>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- SMS Rates Card -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">SMS Rates</h3>
                     <div class="mb-4">
-                        <label class="label text-secondary">SMS Cost</label>
-                        <div class="d-flex justify-content-between fs-14 mb-1">
-                            <span>Masking:</span>
-                            <span class="fw-medium">৳ 0.35</span>
+                        <label class="label text-secondary">Operator-wise (Masking / Non-Masking)</label>
+                        {% for rate in user_rates %}
+                        <div class="d-flex justify-content-between fs-14 mb-2 pb-2 border-bottom">
+                            <span>{{ rate.name }}:</span>
+                            <span class="fw-medium">৳ {{ rate.masking|floatformat:2 }} <span class="text-secondary">/</span> ৳ {{ rate.non_masking|floatformat:2 }}</span>
                         </div>
-                        <div class="d-flex justify-content-between fs-14">
-                            <span>Non-Masking:</span>
-                            <span class="fw-medium">৳ 0.25</span>
-                        </div>
+                        {% endfor %}
                     </div>
                     <div class="alert bg-primary bg-opacity-10 border-0 text-primary fs-14 mb-0">
                         <i class="ri-information-line me-1"></i>
@@ -122,11 +152,46 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
         const messageInput = document.getElementById('message');
         const charCountEl = document.getElementById('charCount');
         const smsCountEl = document.getElementById('smsCount');
         const contentTypeEl = document.getElementById('contentType');
         const charLimitEl = document.getElementById('charLimit');
+        const recipientInput = document.querySelector('input[name="recipient"]');
+        const smsTypeSelect = document.querySelector('select[name="sms_type"]');
+        const recipientCountEl = document.getElementById('recipientCount');
+        const smsTypeDisplayEl = document.getElementById('smsTypeDisplay');
+        const smsCountDisplayEl = document.getElementById('smsCountDisplay');
+        const totalCostEl = document.getElementById('totalCost');
+
+        // User rates from server - mapped by operator code
+        const userRates = {
+            'gp': { name: 'Grameenphone', masking: {{ user_rates.0.masking }}, non_masking: {{ user_rates.0.non_masking }} },
+            'bl': { name: 'Banglalink', masking: {{ user_rates.1.masking }}, non_masking: {{ user_rates.1.non_masking }} },
+            'robi': { name: 'Robi', masking: {{ user_rates.2.masking }}, non_masking: {{ user_rates.2.non_masking }} },
+            'airtel': { name: 'Airtel', masking: {{ user_rates.3.masking }}, non_masking: {{ user_rates.3.non_masking }} },
+            'teletalk': { name: 'Teletalk', masking: {{ user_rates.4.masking }}, non_masking: {{ user_rates.4.non_masking }} }
+        };
+        
+        // Bangladesh mobile number prefixes to operator mapping
+        const operatorPrefixes = {
+            '013': 'gp', '017': 'gp',
+            '014': 'bl', '019': 'bl',
+            '018': 'robi',
+            '016': 'airtel',
+            '015': 'teletalk'
+        };
+        
+        function getOperatorFromNumber(number) {
+            const cleanNum = number.replace(/[\s-]/g, '');
+            if (cleanNum.length < 3) return null;
+            const prefix = cleanNum.substring(0, 3);
+            return operatorPrefixes[prefix] || null;
+        }
+
+        // Bangladesh mobile number regex: 01 followed by 3-9 and 8 more digits
+        const mobileRegex = /^01[3-9]\d{8}$/;
 
         function containsUnicode(text) {
             for (let i = 0; i < text.length; i++) {
@@ -161,9 +226,62 @@
             }
         }
 
+        function validateRecipients() {
+            const value = recipientInput.value.trim();
+            if (!value) {
+                return { valid: false, error: 'Please enter at least one recipient number', count: 0 };
+            }
+            
+            const numbers = value.split(',').map(n => n.trim()).filter(n => n);
+            const invalidNumbers = [];
+            
+            for (const num of numbers) {
+                // Remove any spaces or dashes
+                const cleanNum = num.replace(/[\s-]/g, '');
+                if (!mobileRegex.test(cleanNum)) {
+                    invalidNumbers.push(num);
+                }
+            }
+            
+            if (invalidNumbers.length > 0) {
+                return { 
+                    valid: false, 
+                    error: `Invalid number(s): ${invalidNumbers.join(', ')}. Must be 11 digits starting with 01`,
+                    count: numbers.length 
+                };
+            }
+            
+            return { valid: true, error: null, count: numbers.length };
+        }
+
+        function getRecipientCount() {
+            const result = validateRecipients();
+            return result.count;
+        }
+
+        function calculateTotalCost(recipients, smsCount, smsType) {
+            let totalCost = 0;
+            const rateKey = smsType === 'masking' ? 'masking' : 'non_masking';
+            
+            for (const num of recipients) {
+                const opCode = getOperatorFromNumber(num);
+                if (opCode && userRates[opCode]) {
+                    totalCost += smsCount * userRates[opCode][rateKey];
+                } else {
+                    // Unknown operator - use average rate
+                    const avgRate = Object.values(userRates).reduce((sum, r) => sum + r[rateKey], 0) / 5;
+                    totalCost += smsCount * avgRate;
+                }
+            }
+            
+            return totalCost;
+        }
+
         function updateCounter() {
             const text = messageInput.value;
             const result = calculateSMS(text);
+            const recipientResult = validateRecipients();
+            const smsType = smsTypeSelect.value;
             
             charCountEl.textContent = text.length;
             smsCountEl.textContent = result.count;
@@ -175,9 +293,73 @@
             } else {
                 contentTypeEl.className = 'badge bg-info bg-opacity-10 text-info';
             }
+            
+            // Update estimated cost - only if recipients are valid
+            if (recipientResult.valid && result.count > 0) {
+                const numbers = recipientInput.value.trim().split(',').map(n => n.trim()).filter(n => n);
+                const totalCost = calculateTotalCost(numbers, result.count, smsType);
+                recipientCountEl.textContent = recipientResult.count;
+                recipientCountEl.classList.remove('text-danger');
+                totalCostEl.textContent = totalCost.toFixed(2);
+                totalCostEl.parentElement.classList.remove('text-danger');
+                recipientInput.classList.remove('is-invalid');
+            } else if (!recipientResult.valid) {
+                recipientCountEl.textContent = 'Invalid';
+                recipientCountEl.classList.add('text-danger');
+                totalCostEl.textContent = '0.00';
+                recipientInput.classList.add('is-invalid');
+            } else {
+                recipientCountEl.textContent = recipientResult.count;
+                totalCostEl.textContent = '0.00';
+            }
+            
+            smsTypeDisplayEl.textContent = smsType === 'masking' ? 'Masking' : 'Non-Masking';
+            smsCountDisplayEl.textContent = result.count;
         }
 
+        // Form submission validation
+        form.addEventListener('submit', function(e) {
+            const recipientResult = validateRecipients();
+            
+            if (!recipientResult.valid) {
+                e.preventDefault();
+                recipientInput.classList.add('is-invalid');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Recipient Number',
+                    text: recipientResult.error,
+                    confirmButtonColor: '#dc3545'
+                });
+                return;
+            }
+            
+            if (messageInput.value.trim() === '') {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Message Required',
+                    text: 'Please enter a message to send.',
+                    confirmButtonColor: '#dc3545'
+                });
+                return;
+            }
+            
+            const senderIdSelect = document.querySelector('select[name="sender_id"]');
+            if (!senderIdSelect.value || senderIdSelect.value === 'No sender IDs assigned') {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No Sender ID',
+                    text: 'No sender ID assigned. Please contact admin.',
+                    confirmButtonColor: '#dc3545'
+                });
+                return;
+            }
+        });
+
         messageInput.addEventListener('input', updateCounter);
+        recipientInput.addEventListener('input', updateCounter);
+        smsTypeSelect.addEventListener('change', updateCounter);
     });
 </script>
 {% endblock %}

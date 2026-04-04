@@ -143,7 +143,74 @@
         </div>
 
         <div class="col-md-6">
-            <div class="card bg-white border-0 rounded-3 h-100">
+            <!-- Provider Card -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-0">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
+                        <h3 class="mb-0">Assigned Provider</h3>
+                        {% if not user_provider %}
+                        <button class="btn btn-outline-primary hover-bg fs-14 fw-medium" data-bs-toggle="modal" data-bs-target="#assignProviderModal">
+                            <i class="ri-add-line"></i>
+                            <span>Assign</span>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="default-table-area style-two all-products">
+                        <style>
+                            .table-sm td, .table-sm th {
+                                padding: 0.25rem 0.5rem;
+                                white-space: nowrap;
+                            }
+                            .table-sm td:first-child, .table-sm th:first-child {
+                                padding-left: 1rem;
+                            }
+                            .table-sm td:last-child, .table-sm th:last-child {
+                                padding-right: 1rem;
+                            }
+                        </style>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if user_provider %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center" style="min-width: 0;">
+                                                <span class="material-symbols-outlined fs-20 text-primary flex-shrink-0">business</span>
+                                                <div class="ms-2 ps-1 overflow-hidden text-truncate">
+                                                    <h6 class="fw-medium fs-14 mb-0 text-truncate">{{ user_provider.name }}</h6>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" onclick="removeProvider('{{ user_provider.name|escapejs }}')">
+                                                <i class="material-symbols-outlined fs-16 text-danger">delete</i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2" class="text-center py-4 text-secondary">
+                                            <i class="ri-inbox-line fs-24 mb-2 d-block"></i>
+                                            No provider assigned.
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sender ID Card -->
+            <div class="card bg-white border-0 rounded-3">
                 <div class="card-body p-0">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
                         <h3 class="mb-0">Assigned Sender IDs</h3>
@@ -213,6 +280,63 @@
     </div>
 </div>
 
+<!-- Assign Provider Modal -->
+<div class="modal fade" id="assignProviderModal" tabindex="-1" aria-labelledby="assignProviderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="assignProviderModalLabel">Assign Provider</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Provider</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for provider in all_providers %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center" style="min-width: 0;">
+                                        <span class="material-symbols-outlined fs-20 text-primary flex-shrink-0">business</span>
+                                        <div class="ms-2 ps-1 overflow-hidden text-truncate">
+                                            <h6 class="fw-medium fs-14 mb-0 text-truncate">{{ provider.name }}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <form method="POST" action="{% url 'user_sms_rates' target_user.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="assign_provider">
+                                        <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="ri-add-line me-1"></i>Assign
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center py-4 text-secondary">
+                                    No providers available.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Assign Sender ID Modal -->
 <div class="modal fade" id="assignSenderIdModal" tabindex="-1" aria-labelledby="assignSenderIdModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -277,6 +401,40 @@
 </div>
 
 <script>
+function removeProvider(providerName) {
+    Swal.fire({
+        title: 'Remove Provider?',
+        text: 'Remove "' + providerName + '" from this user?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '{% url "user_sms_rates" target_user.id %}';
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = '{{ csrf_token }}';
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'remove_provider';
+            
+            form.appendChild(csrfToken);
+            form.appendChild(actionInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
 function removeSenderId(userSenderIdId, senderIdName) {
     Swal.fire({
         title: 'Remove Sender ID?',
