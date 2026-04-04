@@ -52,6 +52,10 @@
             align-items: center;
             gap: 16px;
         }
+        [data-theme=dark] .stat-card {
+            background: #0C1427 !important;
+            border-color: #172036 !important;
+        }
         .stat-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -65,7 +69,7 @@
             width: 4px;
             background: linear-gradient(180deg, var(--card-color) 0%, var(--card-color-light) 100%);
         }
-        .stat-card.sms { --card-color: #6366f1; --card-color-light: #818cf8; }
+        .stat-card.sms { --card-color: #2563eb; --card-color-light: #60a5fa; }
         .stat-card.wallet { --card-color: #10b981; --card-color-light: #34d399; }
         .stat-card.masking { --card-color: #0ea5e9; --card-color-light: #38bdf8; }
         .stat-card.non-masking { --card-color: #f43f5e; --card-color-light: #fb7185; }
@@ -80,7 +84,7 @@
             flex-shrink: 0;
         }
         .stat-card.sms .stat-icon-wrapper {
-            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
         }
         .stat-card.wallet .stat-icon-wrapper {
             background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
@@ -95,7 +99,7 @@
         .stat-icon-wrapper i {
             font-size: 26px;
         }
-        .stat-card.sms .stat-icon-wrapper i { color: #6366f1; }
+        .stat-card.sms .stat-icon-wrapper i { color: #2563eb; }
         .stat-card.wallet .stat-icon-wrapper i { color: #10b981; }
         .stat-card.masking .stat-icon-wrapper i { color: #0ea5e9; }
         .stat-card.non-masking .stat-icon-wrapper i { color: #f43f5e; }
@@ -111,15 +115,22 @@
             line-height: 1.2;
             margin-bottom: 4px;
         }
-        .stat-card.sms .stat-value { color: #1e1b4b; }
-        .stat-card.wallet .stat-value { color: #064e3b; }
-        .stat-card.masking .stat-value { color: #0c4a6e; }
-        .stat-card.non-masking .stat-value { color: #881337; }
+        .stat-card.sms .stat-value { color: #2563eb; }
+        [data-bs-theme="dark"] .stat-card.sms .stat-value { color: #60a5fa; }
+        .stat-card.wallet .stat-value { color: #10b981; }
+        [data-bs-theme="dark"] .stat-card.wallet .stat-value { color: #34d399; }
+        .stat-card.masking .stat-value { color: #0ea5e9; }
+        [data-bs-theme="dark"] .stat-card.masking .stat-value { color: #38bdf8; }
+        .stat-card.non-masking .stat-value { color: #f43f5e; }
+        [data-bs-theme="dark"] .stat-card.non-masking .stat-value { color: #fb7185; }
         
         .stat-label {
             font-size: 13px;
             font-weight: 500;
             color: #6b7280;
+        }
+        [data-theme=dark] .stat-label {
+            color: #8695AA !important;
         }
 
         .quick-action-card {
@@ -179,6 +190,10 @@
             border: 1px solid #e9ecef;
             overflow: hidden;
         }
+        [data-theme=dark] .chart-card {
+            background: #0C1427 !important;
+            border-color: #172036 !important;
+        }
         .chart-card .card-header {
             padding: 20px 24px;
             border-bottom: 1px solid #f3f4f6;
@@ -186,11 +201,17 @@
             justify-content: space-between;
             align-items: center;
         }
+        [data-theme=dark] .chart-card .card-header {
+            border-color: #172036 !important;
+        }
         .chart-card .card-header h5 {
             font-size: 16px;
             font-weight: 600;
             color: #111827;
             margin: 0;
+        }
+        [data-theme=dark] .chart-card .card-header h5 {
+            color: #fff;
         }
         .chart-card .card-body {
             padding: 24px;
@@ -249,14 +270,8 @@
             <div class="chart-card">
                 <div class="card-header">
                     <h5><i class="ri-bar-chart-box-line me-2 text-primary"></i>SMS Usage Statistics</h5>
-                    <select class="form-select form-select-sm" style="width: 140px;">
-                        <option selected>This Month</option>
-                        <option>Last 30 Days</option>
-                        <option>Last 90 Days</option>
-                        <option>This Year</option>
-                    </select>
                 </div>
-                <div class="card-body">
+                <div class="card-body pb-0">
                     {% if has_sms_data %}
                     <div id="smsChart" style="height: 320px;"></div>
                     {% else %}
@@ -283,6 +298,10 @@
                     border: 1px solid #e5e7eb;
                     padding: 20px;
                 }
+                [data-theme=dark] .quick-actions-card {
+                    background: #0C1427 !important;
+                    border-color: #172036 !important;
+                }
                 .quick-actions-title {
                     font-size: 14px;
                     font-weight: 600;
@@ -291,6 +310,9 @@
                     display: flex;
                     align-items: center;
                     gap: 8px;
+                }
+                [data-theme=dark] .quick-actions-title {
+                    color: #fff;
                 }
                 .quick-actions-title i {
                     color: #f59e0b;
@@ -310,6 +332,9 @@
                 }
                 .quick-action-item:hover {
                     background: #f9fafb;
+                }
+                [data-theme=dark] .quick-action-item:hover {
+                    background: #15203c !important;
                 }
                 .quick-action-icon {
                     width: 40px;
@@ -347,9 +372,15 @@
                     color: #111827;
                     margin-bottom: 2px;
                 }
+                [data-theme=dark] .quick-action-label {
+                    color: #fff;
+                }
                 .quick-action-desc {
                     font-size: 12px;
                     color: #6b7280;
+                }
+                [data-theme=dark] .quick-action-desc {
+                    color: #8695AA !important;
                 }
                 .quick-action-arrow {
                     color: #9ca3af;
@@ -400,4 +431,87 @@
         </div>
     </div>
 </div>
+
+{% if has_sms_data %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // SMS Chart
+        var options = {
+            series: [{
+                name: 'SMS Sent',
+                data: {{ chart_data|safe }}
+            }],
+            chart: {
+                type: 'area',
+                height: 320,
+                toolbar: {
+                    show: false
+                }
+            },
+            colors: ['#2563eb'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.2,
+                    stops: [0, 90, 100]
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 2
+            },
+            xaxis: {
+                categories: {{ chart_labels|safe }},
+                labels: {
+                    style: {
+                        colors: document.body.getAttribute('data-theme') === 'dark' ? '#8695AA' : '#6b7280',
+                        fontSize: '12px'
+                    }
+                },
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: document.body.getAttribute('data-theme') === 'dark' ? '#8695AA' : '#6b7280',
+                        fontSize: '12px'
+                    },
+                    formatter: function(value) {
+                        return Math.round(value);
+                    }
+                }
+            },
+            grid: {
+                borderColor: document.body.getAttribute('data-theme') === 'dark' ? '#172036' : '#f3f4f6',
+                strokeDashArray: 4,
+                xaxis: {
+                    lines: {
+                        show: true
+                    }
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(value) {
+                        return value + ' SMS';
+                    }
+                }
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#smsChart"), options);
+        chart.render();
+    });
+</script>
+{% endif %}
 {% endblock %}

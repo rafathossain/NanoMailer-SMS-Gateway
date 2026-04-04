@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
+from decimal import Decimal
 import json
 import logging
 from .models import DefaultRate, SMSProvider, SenderID, PaymentGateway, Profile, UserSenderID
@@ -13,7 +14,71 @@ general_logger = logging.getLogger('general')
 
 @login_required
 def dashboard_view(request):
-    return render(request, 'core/dashboard.html')
+    """Dashboard view with user-specific statistics"""
+    from sms_gateway.models import SMSLog
+    from django.db.models import Sum, Count, Q
+    from datetime import datetime, timedelta
+    
+    user = request.user
+    
+    # Get user's wallet balance
+    wallet_balance = user.profile.balance if hasattr(user, 'profile') else Decimal('0.00')
+    
+    # Get SMS statistics
+    sms_logs = SMSLog.objects.filter(user=user)
+    
+    # Total SMS sent (SENT + DELIVERED status)
+    total_sms_sent = sms_logs.filter(
+        status__in=['SENT', 'DELIVERED']
+    ).count()
+    
+    # Masking SMS count
+    masking_sms_count = sms_logs.filter(
+        message_type='masking',
+        status__in=['SENT', 'DELIVERED']
+    ).count()
+    
+    # Non-Masking SMS count
+    non_masking_sms_count = sms_logs.filter(
+        message_type='non_masking',
+        status__in=['SENT', 'DELIVERED']
+    ).count()
+    
+    # SMS data for chart (last 30 days)
+    today = datetime.now().date()
+    thirty_days_ago = today - timedelta(days=30)
+    
+    # Check if user has any SMS data
+    has_sms_data = sms_logs.filter(
+        status__in=['SENT', 'DELIVERED'],
+        created_at__date__gte=thirty_days_ago
+    ).exists()
+    
+    # Prepare chart data - daily SMS count for last 30 days
+    chart_data = []
+    chart_labels = []
+    
+    for i in range(30, -1, -1):
+        date = today - timedelta(days=i)
+        chart_labels.append(date.strftime('%d %b'))
+        
+        daily_count = sms_logs.filter(
+            status__in=['SENT', 'DELIVERED'],
+            created_at__date=date
+        ).count()
+        chart_data.append(daily_count)
+    
+    context = {
+        'wallet_balance': wallet_balance,
+        'total_sms_sent': total_sms_sent,
+        'masking_sms_count': masking_sms_count,
+        'non_masking_sms_count': non_masking_sms_count,
+        'has_sms_data': has_sms_data,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
+    }
+    
+    return render(request, 'core/dashboard.html', context)
 
 
 @login_required
@@ -634,19 +699,22 @@ def profile_view(request):
     days_since_joined = (timezone.now() - user.date_joined).days
     years_member = max(1, days_since_joined // 365)
     
-    # Get last login formatted
+    # Get last login formatted (convert to local timezone)
     last_login = user.last_login
     if last_login:
+        # Convert to local timezone
+        last_login_local = last_login.astimezone()
         # Check if last login was today
-        if last_login.date() == timezone.now().date():
-            last_login_str = f"Today, {last_login.strftime('%I:%M %p')}"
+        if last_login_local.date() == timezone.now().date():
+            last_login_str = f"Today, {last_login_local.strftime('%I:%M %p')}"
         else:
-            last_login_str = last_login.strftime('%b %d, %Y')
+            last_login_str = last_login_local.strftime('%b %d, %Y %I:%M %p')
     else:
         last_login_str = "Never"
     
-    # Format date joined
-    date_joined_str = user.date_joined.strftime('%b %d, %Y')
+    # Format date joined (convert to local timezone)
+    date_joined_local = user.date_joined.astimezone()
+    date_joined_str = date_joined_local.strftime('%b %d, %Y')
     
     # Handle profile update
     if request.method == 'POST':

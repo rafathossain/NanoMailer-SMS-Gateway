@@ -85,12 +85,13 @@ def initiate_payment(user, amount, customer_info, success_url, fail_url, cancel_
         status='PENDING'
     )
     
-    # Initiate payment with gateway (pass base amount, gateway will calculate total with TDR)
+    # Initiate payment with gateway (pass total_amount which includes the fee)
+    # This ensures user is charged the correct amount per formula: X = A / (1 - r)
     result = gateway.initiate_payment(
         transaction_id=transaction_id,
-        amount=amount,
+        amount=total_amount,
         customer_info=customer_info,
-        tdr=tdr,
+        tdr=Decimal('0.00'),  # Don't let gateway add fee again, we already calculated it
         success_url=success_url,
         fail_url=fail_url,
         cancel_url=cancel_url,

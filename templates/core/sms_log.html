@@ -57,6 +57,10 @@
             align-items: center;
             gap: 14px;
         }
+        [data-theme=dark] .stat-card {
+            background: #0C1427 !important;
+            border-color: #172036 !important;
+        }
         .stat-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -70,7 +74,7 @@
             width: 4px;
             background: linear-gradient(180deg, var(--card-color) 0%, var(--card-color-light) 100%);
         }
-        .stat-card.total { --card-color: #6366f1; --card-color-light: #818cf8; }
+        .stat-card.total { --card-color: #2563eb; --card-color-light: #60a5fa; }
         .stat-card.delivered { --card-color: #10b981; --card-color-light: #34d399; }
         .stat-card.pending { --card-color: #f59e0b; --card-color-light: #fbbf24; }
         .stat-card.failed { --card-color: #ef4444; --card-color-light: #f87171; }
@@ -85,7 +89,7 @@
             flex-shrink: 0;
         }
         .stat-card.total .stat-icon-wrapper {
-            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
         }
         .stat-card.delivered .stat-icon-wrapper {
             background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
@@ -100,7 +104,7 @@
         .stat-icon-wrapper i {
             font-size: 22px;
         }
-        .stat-card.total .stat-icon-wrapper i { color: #6366f1; }
+        .stat-card.total .stat-icon-wrapper i { color: #2563eb; }
         .stat-card.delivered .stat-icon-wrapper i { color: #10b981; }
         .stat-card.pending .stat-icon-wrapper i { color: #f59e0b; }
         .stat-card.failed .stat-icon-wrapper i { color: #ef4444; }
@@ -116,17 +120,50 @@
             line-height: 1.2;
             margin-bottom: 2px;
         }
-        .stat-card.total .stat-value { color: #1e1b4b; }
-        .stat-card.delivered .stat-value { color: #064e3b; }
-        .stat-card.pending .stat-value { color: #78350f; }
-        .stat-card.failed .stat-value { color: #7f1d1d; }
+        .stat-card.total .stat-value { color: #2563eb; }
+        [data-theme=dark] .stat-card.total .stat-value { color: #60a5fa; }
+        .stat-card.delivered .stat-value { color: #10b981; }
+        [data-theme=dark] .stat-card.delivered .stat-value { color: #34d399; }
+        .stat-card.pending .stat-value { color: #f59e0b; }
+        [data-theme=dark] .stat-card.pending .stat-value { color: #fbbf24; }
+        .stat-card.failed .stat-value { color: #ef4444; }
+        [data-theme=dark] .stat-card.failed .stat-value { color: #f87171; }
         
         .stat-label {
             font-size: 12px;
             font-weight: 500;
             color: #6b7280;
         }
+        [data-theme=dark] .stat-label {
+            color: #8695AA !important;
+        }
         
+        /* SMS Details Modal Dark Mode */
+        [data-theme=dark] #smsDetailsContent {
+            background-color: #0C1427 !important;
+            color: #fff;
+        }
+        [data-theme=dark] #smsDetailsContent .table {
+            color: #fff;
+            background-color: #0C1427 !important;
+        }
+        [data-theme=dark] #smsDetailsContent tbody {
+            background-color: #0C1427 !important;
+        }
+        [data-theme=dark] #smsDetailsContent tr {
+            background-color: #0C1427 !important;
+        }
+        [data-theme=dark] #smsDetailsContent td {
+            color: #fff;
+            background-color: #0C1427 !important;
+            border-color: #172036 !important;
+        }
+        [data-theme=dark] #smsDetailsContent .text-secondary {
+            color: #8695AA !important;
+        }
+        [data-theme=dark] #smsDetailsContent .border-bottom {
+            border-color: #172036 !important;
+        }
 
     </style>
 

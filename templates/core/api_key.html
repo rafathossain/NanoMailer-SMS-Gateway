@@ -54,6 +54,10 @@
                     overflow: hidden;
                     margin-bottom: 24px;
                 }
+                [data-theme=dark] .api-key-card {
+                    background: #0C1427 !important;
+                    border-color: #172036 !important;
+                }
                 .api-key-header {
                     background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
                     padding: 32px;
@@ -109,6 +113,9 @@
                     letter-spacing: 0.5px;
                     margin-bottom: 12px;
                 }
+                [data-theme=dark] .api-key-label {
+                    color: #8695AA !important;
+                }
                 .api-key-display {
                     background: #f9fafb;
                     border: 1px solid #e5e7eb;
@@ -119,12 +126,19 @@
                     gap: 16px;
                     margin-bottom: 24px;
                 }
+                [data-theme=dark] .api-key-display {
+                    background: #15203c !important;
+                    border-color: #172036 !important;
+                }
                 .api-key-value {
                     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
                     font-size: 15px;
                     color: #111827;
                     flex: 1;
                     letter-spacing: 0.5px;
+                }
+                [data-theme=dark] .api-key-value {
+                    color: #fff;
                 }
                 .api-key-actions {
                     display: flex;
@@ -155,6 +169,10 @@
                 .api-key-btn.visibility:hover {
                     background: #e5e7eb;
                 }
+                [data-theme=dark] .api-key-btn.visibility {
+                    background: #1b2a4e !important;
+                    color: #8695AA !important;
+                }
                 .api-key-btn i {
                     font-size: 20px;
                 }
@@ -165,6 +183,9 @@
                     padding-top: 24px;
                     border-top: 1px solid #f3f4f6;
                 }
+                [data-theme=dark] .api-key-info {
+                    border-color: #172036 !important;
+                }
                 .api-key-info-item {
                     text-align: center;
                 }
@@ -173,10 +194,24 @@
                     color: #6b7280;
                     margin-bottom: 4px;
                 }
+                [data-theme=dark] .api-key-info-label {
+                    color: #8695AA !important;
+                }
                 .api-key-info-value {
                     font-size: 14px;
                     font-weight: 600;
                     color: #111827;
+                }
+                [data-theme=dark] .api-key-info-value {
+                    color: #fff;
+                }
+                .base-url-box {
+                    background: #f8fafc;
+                    border: 1px solid #e5e7eb;
+                }
+                [data-theme=dark] .base-url-box {
+                    background: #15203c !important;
+                    border-color: #172036 !important;
                 }
                 .api-key-status {
                     display: inline-flex;
@@ -211,6 +246,10 @@
                     align-items: center;
                     gap: 16px;
                 }
+                [data-theme=dark] .rotate-section {
+                    background: #451a03 !important;
+                    border-color: #78350f !important;
+                }
                 .rotate-icon {
                     width: 48px;
                     height: 48px;
@@ -221,9 +260,15 @@
                     justify-content: center;
                     flex-shrink: 0;
                 }
+                [data-theme=dark] .rotate-icon {
+                    background: #78350f !important;
+                }
                 .rotate-icon i {
                     font-size: 24px;
                     color: #d97706;
+                }
+                [data-theme=dark] .rotate-icon i {
+                    color: #fbbf24 !important;
                 }
                 .rotate-content {
                     flex: 1;
@@ -234,9 +279,15 @@
                     color: #92400e;
                     margin-bottom: 4px;
                 }
+                [data-theme=dark] .rotate-title {
+                    color: #fbbf24 !important;
+                }
                 .rotate-text {
                     font-size: 13px;
                     color: #a16207;
+                }
+                [data-theme=dark] .rotate-text {
+                    color: #fcd34d !important;
                 }
                 .rotate-btn {
                     background: #d97706;
@@ -292,7 +343,7 @@
                     {% endif %}
                     
                     <!-- Base URL -->
-                    <div class="mt-3 p-3 bg-light rounded" style="background: #f8fafc !important;">
+                    <div class="mt-3 p-3 base-url-box rounded">
                         <div class="fs-12 text-secondary mb-1"><i class="ri-global-line me-1"></i>Base URL</div>
                         <div class="d-flex align-items-center">
                             <code class="fs-14 text-primary" style="background: transparent;">{{ request.scheme }}://{{ request.get_host }}</code>
@@ -334,6 +385,10 @@
                 .security-card:hover {
                     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
                 }
+                [data-theme=dark] .security-card {
+                    background: #0C1427 !important;
+                    border-color: #172036 !important;
+                }
                 .security-icon {
                     width: 48px;
                     height: 48px;
@@ -346,11 +401,17 @@
                 .security-card.secret .security-icon {
                     background: #fef2f2;
                 }
+                [data-theme=dark] .security-card.secret .security-icon {
+                    background: #450a0a !important;
+                }
                 .security-card.secret .security-icon i {
                     color: #dc2626;
                 }
                 .security-card.rotate .security-icon {
                     background: #fffbeb;
+                }
+                [data-theme=dark] .security-card.rotate .security-icon {
+                    background: #451a03 !important;
                 }
                 .security-card.rotate .security-icon i {
                     color: #d97706;
@@ -358,11 +419,20 @@
                 .security-card.server .security-icon {
                     background: #eff6ff;
                 }
+                [data-theme=dark] .security-card.server .security-icon {
+                    background: #172554 !important;
+                }
                 .security-card.server .security-icon i {
                     color: #2563eb;
                 }
+                [data-theme=dark] .security-card.server .security-icon i {
+                    color: #60a5fa !important;
+                }
                 .security-card.monitor .security-icon {
                     background: #f0fdfa;
+                }
+                [data-theme=dark] .security-card.monitor .security-icon {
+                    background: #134e4a !important;
                 }
                 .security-card.monitor .security-icon i {
                     color: #0d9488;
@@ -373,10 +443,22 @@
                     color: #111827;
                     margin-bottom: 6px;
                 }
+                [data-theme=dark] .security-title {
+                    color: #fff;
+                }
                 .security-text {
                     font-size: 13px;
                     color: #6b7280;
                     line-height: 1.5;
+                }
+                [data-theme=dark] .security-text {
+                    color: #8695AA !important;
+                }
+                .doc-card {
+                    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+                }
+                [data-theme=dark] .doc-card {
+                    background: linear-gradient(135deg, #172554 0%, #1e3a8a 100%) !important;
                 }
             </style>
 
@@ -413,7 +495,7 @@
             </div>
 
             <!-- View Full Documentation -->
-            <div class="security-card mt-4" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+            <div class="security-card doc-card mt-4">
                 <div class="security-icon" style="background: #3b82f6;">
                     <i class="ri-book-open-line fs-24 text-white"></i>
                 </div>

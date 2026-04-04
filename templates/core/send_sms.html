@@ -119,6 +119,10 @@
                     padding: 24px;
                     border: 1px solid #e5e7eb;
                 }
+                [data-theme=dark] .cost-card {
+                    background: #0C1427 !important;
+                    border-color: #172036 !important;
+                }
                 .cost-card .card-header {
                     display: flex;
                     align-items: center;
@@ -126,6 +130,9 @@
                     margin-bottom: 20px;
                     padding-bottom: 16px;
                     border-bottom: 2px solid #f3f4f6;
+                }
+                [data-theme=dark] .cost-card .card-header {
+                    border-color: #172036 !important;
                 }
                 .cost-card .header-icon {
                     width: 48px;
@@ -145,11 +152,17 @@
                     color: #6b7280;
                     margin: 0;
                 }
+                [data-theme=dark] .cost-card .header-title {
+                    color: #8695AA !important;
+                }
                 .cost-card .total-amount {
                     font-size: 20px;
                     font-weight: 700;
                     color: #111827;
                     margin-top: 4px;
+                }
+                [data-theme=dark] .cost-card .total-amount {
+                    color: #fff;
                 }
                 .cost-card .total-amount span {
                     font-weight: 600;
@@ -160,12 +173,18 @@
                     border-radius: 12px;
                     padding: 16px;
                 }
+                [data-theme=dark] .cost-breakdown {
+                    background: #15203c !important;
+                }
                 .cost-breakdown-item {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     padding: 10px 0;
                     border-bottom: 1px solid #e5e7eb;
+                }
+                [data-theme=dark] .cost-breakdown-item {
+                    border-color: #172036 !important;
                 }
                 .cost-breakdown-item:last-child {
                     border-bottom: none;
@@ -177,6 +196,9 @@
                     font-size: 13px;
                     color: #6b7280;
                 }
+                [data-theme=dark] .cost-breakdown-item .label {
+                    color: #8695AA !important;
+                }
                 .cost-breakdown-item .label i {
                     color: #9ca3af;
                     font-size: 16px;
@@ -185,6 +207,9 @@
                     font-size: 14px;
                     font-weight: 600;
                     color: #111827;
+                }
+                [data-theme=dark] .cost-breakdown-item .value {
+                    color: #fff;
                 }
             </style>
 
@@ -222,6 +247,10 @@
                     padding: 24px;
                     border: 1px solid #e5e7eb;
                 }
+                [data-theme=dark] .rates-card {
+                    background: #0C1427 !important;
+                    border-color: #172036 !important;
+                }
                 .rates-card .card-header {
                     display: flex;
                     align-items: center;
@@ -229,6 +258,9 @@
                     margin-bottom: 20px;
                     padding-bottom: 16px;
                     border-bottom: 2px solid #f3f4f6;
+                }
+                [data-theme=dark] .rates-card .card-header {
+                    border-color: #172036 !important;
                 }
                 .rates-card .header-icon {
                     width: 44px;
@@ -249,9 +281,15 @@
                     color: #111827;
                     margin: 0;
                 }
+                [data-theme=dark] .rates-card .header-title {
+                    color: #fff;
+                }
                 .rates-card .header-subtitle {
                     font-size: 12px;
                     color: #6b7280;
+                }
+                [data-theme=dark] .rates-card .header-subtitle {
+                    color: #8695AA !important;
                 }
                 .rate-header {
                     display: flex;
@@ -260,12 +298,18 @@
                     border-bottom: 2px solid #e5e7eb;
                     margin-bottom: 8px;
                 }
+                [data-theme=dark] .rate-header {
+                    border-color: #172036 !important;
+                }
                 .rate-header-label {
                     font-size: 11px;
                     font-weight: 600;
                     color: #6b7280;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
+                }
+                [data-theme=dark] .rate-header-label {
+                    color: #8695AA !important;
                 }
                 .rate-header-prices {
                     display: flex;
@@ -279,12 +323,18 @@
                     border-bottom: 1px solid #f3f4f6;
                     transition: all 0.2s ease;
                 }
+                [data-theme=dark] .rate-item {
+                    border-color: #172036 !important;
+                }
                 .rate-item:hover {
                     background: #f9fafb;
                     margin: 0 -12px;
                     padding-left: 12px;
                     padding-right: 12px;
                     border-radius: 8px;
+                }
+                [data-theme=dark] .rate-item:hover {
+                    background: #15203c !important;
                 }
                 .rate-item:last-child {
                     border-bottom: none;
@@ -293,6 +343,9 @@
                     font-size: 14px;
                     font-weight: 500;
                     color: #374151;
+                }
+                [data-theme=dark] .rate-operator-name {
+                    color: #fff;
                 }
                 .rate-prices {
                     display: flex;
@@ -308,6 +361,9 @@
                     color: #111827;
                     display: block;
                 }
+                [data-theme=dark] .rate-box .rate-value {
+                    color: #fff;
+                }
                 .rate-box .rate-label {
                     font-size: 10px;
                     font-weight: 600;
@@ -316,6 +372,9 @@
                     letter-spacing: 0.5px;
                     margin-top: 2px;
                     display: block;
+                }
+                [data-theme=dark] .rate-box .rate-label {
+                    color: #8695AA !important;
                 }
                 .rate-box.masking .rate-value {
                     color: #059669;
@@ -332,6 +391,9 @@
                     align-items: center;
                     gap: 10px;
                 }
+                [data-theme=dark] .rates-footer {
+                    background: #15203c !important;
+                }
                 .rates-footer i {
                     color: #0284c7;
                     font-size: 18px;
@@ -340,6 +402,9 @@
                     font-size: 12px;
                     color: #0369a1;
                     font-weight: 500;
+                }
+                [data-theme=dark] .rates-footer span {
+                    color: #60a5fa !important;
                 }
             </style>
 
