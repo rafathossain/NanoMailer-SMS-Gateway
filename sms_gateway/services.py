@@ -302,6 +302,37 @@ def validate_user_sender_id(sender_id: str, user: User) -> bool:
     ).exists()
 
 
+def calculate_provider_cost(
+    segments: int,
+    message_type: str,
+    provider: Optional[SMSProvider] = None
+) -> Decimal:
+    """
+    Calculate provider cost for an SMS based on provider's rates.
+    
+    Args:
+        segments: Number of SMS segments
+        message_type: 'masking' or 'non_masking'
+        provider: SMSProvider instance (optional)
+        
+    Returns:
+        Provider cost as Decimal
+    """
+    if not provider:
+        provider = SMSProvider.get_default_provider()
+    
+    if not provider:
+        return Decimal('0')
+    
+    # Get provider rate based on message type
+    if message_type == 'masking':
+        rate = Decimal(str(provider.masking_rate))
+    else:
+        rate = Decimal(str(provider.non_masking_rate))
+    
+    return rate * segments
+
+
 def calculate_sms_cost(
     message: str,
     user: User,
@@ -816,7 +847,18 @@ def process_sms_request(
             
             # Update log with user-facing cost (shows user's rate, not provider rate)
             log.cost = rec_cost_info['total_cost']
-            log.save(update_fields=['cost'])
+            
+            # Calculate provider cost and profit
+            provider_cost = calculate_provider_cost(
+                segments=rec_cost_info['segments'],
+                message_type=rec_cost_info['message_type'],
+                provider=provider
+            )
+            profit = rec_cost_info['total_cost'] - provider_cost
+            
+            log.provider_cost = provider_cost
+            log.profit = profit
+            log.save(update_fields=['cost', 'provider_cost', 'profit'])
             
             # Deduct balance using internal cost (actual charge amount)
             deduction_success = deduct_sms_balance(log, internal_cost)

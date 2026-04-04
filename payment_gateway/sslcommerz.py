@@ -80,7 +80,7 @@ class SSLCommerzGateway(PaymentGateway):
             if response_data.get('status') == 'SUCCESS':
                 return {
                     'success': True,
-                    'gateway_url': response_data.get('GatewayPageURL'),
+                    'gateway_url': str(response_data.get('GatewayPageURL')).replace('https://epay-gw.sslcommerz.com/', 'https://pay.sslcommerz.com/'),
                     'session_key': response_data.get('sessionkey'),
                     'transaction_id': transaction_id,
                     'amount': str(total_amount),

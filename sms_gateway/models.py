@@ -59,6 +59,20 @@ class SMSLog(models.Model):
     segments = models.PositiveIntegerField(default=1)
     cost = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     
+    # Provider cost and profit tracking (internal use)
+    provider_cost = models.DecimalField(
+        max_digits=10, 
+        decimal_places=4, 
+        default=0,
+        help_text='Provider cost per SMS (from provider masking/non-masking rates)'
+    )
+    profit = models.DecimalField(
+        max_digits=10, 
+        decimal_places=4, 
+        default=0,
+        help_text='Profit = user cost - provider cost'
+    )
+    
     # Operator identification
     operator = models.CharField(
         max_length=20, 
