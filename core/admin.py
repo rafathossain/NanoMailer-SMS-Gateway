@@ -5,8 +5,8 @@ from .models import Profile, DefaultRate, SMSProvider, SenderID, PaymentGateway
 
 @admin.register(PaymentGateway)
 class PaymentGatewayAdmin(admin.ModelAdmin):
-    list_display = ['name', 'gateway_class', 'tdr', 'is_active', 'is_default', 'updated_at']
-    list_filter = ['gateway_class', 'is_active', 'is_default']
+    list_display = ['name', 'gateway_class', 'tdr', 'is_active', 'updated_at']
+    list_filter = ['gateway_class', 'is_active']
     search_fields = ['name']
     readonly_fields = ['created_at', 'updated_at']
 

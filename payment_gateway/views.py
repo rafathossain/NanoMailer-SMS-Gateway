@@ -17,14 +17,14 @@ from core.models import PaymentGateway
 def add_fund_view(request):
     """View for adding funds - payment initiation"""
     # Get all active payment gateways
-    active_gateways = PaymentGateway.objects.filter(is_active=True).order_by('-is_default', 'name')
+    active_gateways = PaymentGateway.objects.filter(is_active=True).order_by('name')
     
     if not active_gateways.exists():
         messages.error(request, 'No active payment gateway available. Please contact support.')
         return redirect('dashboard')
     
-    # Default gateway
-    default_gateway = active_gateways.filter(is_default=True).first() or active_gateways.first()
+    # Default to first gateway
+    default_gateway = active_gateways.first()
     
     if request.method == 'POST':
         try:

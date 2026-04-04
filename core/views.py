@@ -302,7 +302,7 @@ def payment_gateway_view(request):
             gateway_class = request.POST.get('gateway_class', '').strip()
             credentials_json = request.POST.get('credentials_json', '').strip()
             tdr = request.POST.get('tdr', '').strip()
-            is_default = request.POST.get('is_default') == 'on'
+            logo = request.FILES.get('logo')
             
             if name and gateway_class:
                 # Parse credentials JSON
@@ -319,16 +319,77 @@ def payment_gateway_view(request):
                     messages.error(request, 'Invalid TDR value.')
                     return redirect('payment_gateway')
                 
-                PaymentGateway.objects.create(
+                gateway = PaymentGateway.objects.create(
                     name=name,
                     gateway_class=gateway_class,
                     credentials=credentials,
-                    tdr=tdr_val,
-                    is_default=is_default
+                    tdr=tdr_val
                 )
+                
+                # Save logo if provided
+                if logo:
+                    gateway.logo = logo
+                    gateway.save()
+                
                 messages.success(request, f'Payment gateway "{name}" added successfully!')
             else:
                 messages.error(request, 'Please provide all required fields.')
+                
+        elif action == 'edit':
+            gateway_id = request.POST.get('gateway_id')
+            name = request.POST.get('name', '').strip()
+            gateway_class = request.POST.get('gateway_class', '').strip()
+            credentials_json = request.POST.get('credentials_json', '').strip()
+            tdr = request.POST.get('tdr', '').strip()
+            logo = request.FILES.get('logo')
+            clear_logo = request.POST.get('clear_logo') == 'on'
+            
+            try:
+                gateway = PaymentGateway.objects.get(id=gateway_id)
+                if name and gateway_class:
+                    # Parse credentials JSON
+                    try:
+                        credentials = json.loads(credentials_json) if credentials_json else {}
+                    except json.JSONDecodeError:
+                        messages.error(request, 'Invalid JSON format for credentials.')
+                        return redirect('payment_gateway')
+                    
+                    # Parse TDR
+                    try:
+                        tdr_val = float(tdr) if tdr else 0.00
+                    except ValueError:
+                        messages.error(request, 'Invalid TDR value.')
+                        return redirect('payment_gateway')
+                    
+                    gateway.name = name
+                    gateway.gateway_class = gateway_class
+                    gateway.credentials = credentials
+                    gateway.tdr = tdr_val
+                    
+                    # Handle logo update
+                    if clear_logo:
+                        gateway.logo.delete(save=False)
+                        gateway.logo = None
+                    elif logo:
+                        gateway.logo = logo
+                    
+                    gateway.save()
+                    messages.success(request, f'Payment gateway "{name}" updated successfully!')
+                else:
+                    messages.error(request, 'Please provide all required fields.')
+            except PaymentGateway.DoesNotExist:
+                messages.error(request, 'Payment gateway not found.')
+                
+        elif action == 'toggle_status':
+            gateway_id = request.POST.get('gateway_id')
+            try:
+                gateway = PaymentGateway.objects.get(id=gateway_id)
+                gateway.is_active = not gateway.is_active
+                gateway.save()
+                status = 'activated' if gateway.is_active else 'deactivated'
+                messages.success(request, f'Payment gateway "{gateway.name}" {status} successfully!')
+            except PaymentGateway.DoesNotExist:
+                messages.error(request, 'Payment gateway not found.')
                 
         elif action == 'delete':
             gateway_id = request.POST.get('gateway_id')
@@ -339,7 +400,7 @@ def payment_gateway_view(request):
             except PaymentGateway.DoesNotExist:
                 messages.error(request, 'Payment gateway not found.')
     
-    gateways = PaymentGateway.objects.all().order_by('-is_default', '-created_at')
+    gateways = PaymentGateway.objects.all().order_by('-created_at')
     context = {
         'gateways': gateways,
         'gateway_choices': PaymentGateway.GATEWAY_CHOICES,
@@ -536,6 +597,21 @@ def change_password_view(request):
 @login_required
 def users_view(request):
     from django.contrib.auth.models import User
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'toggle_status':
+            user_id = request.POST.get('user_id')
+            try:
+                user = User.objects.get(id=user_id)
+                user.is_active = not user.is_active
+                user.save()
+                status = 'activated' if user.is_active else 'deactivated'
+                messages.success(request, f'User "{user.get_full_name() or user.username}" {status} successfully.')
+            except User.DoesNotExist:
+                messages.error(request, 'User not found.')
+            return redirect('users')
     
     users = User.objects.select_related('profile').all().order_by('-date_joined')
     context = {

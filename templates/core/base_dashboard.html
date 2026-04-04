@@ -80,30 +80,6 @@
                     </li>
 
                     <li class="menu-title small text-uppercase">
-                        <span class="menu-title-text">SETTINGS</span>
-                    </li>
-                    <li class="menu-item{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} open{% endif %}">
-                        <a href="javascript:void(0);" class="menu-link menu-toggle{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} active{% endif %}">
-                            <span class="material-symbols-outlined menu-icon">settings</span>
-                            <span class="title">System</span>
-                        </a>
-                        <ul class="menu-sub">
-                            <li class="menu-item">
-                                <a href="{% url 'sms_rates' %}" class="menu-link{% if request.resolver_match.url_name == 'sms_rates' %} active{% endif %}">SMS Rates</a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="{% url 'provider' %}" class="menu-link{% if request.resolver_match.url_name == 'provider' %} active{% endif %}">Provider</a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="{% url 'sender_id' %}" class="menu-link{% if request.resolver_match.url_name == 'sender_id' %} active{% endif %}">Sender ID</a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="{% url 'payment_gateway' %}" class="menu-link{% if request.resolver_match.url_name == 'payment_gateway' %} active{% endif %}">Payment Gateway</a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <li class="menu-title small text-uppercase">
                         <span class="menu-title-text">DEVELOPER</span>
                     </li>
                     <li class="menu-item">
@@ -122,11 +98,31 @@
                     <li class="menu-title small text-uppercase">
                         <span class="menu-title-text">ADMIN</span>
                     </li>
-                    <li class="menu-item">
+                    <li class="menu-item{% if request.resolver_match.url_name == 'users' %} open{% endif %}">
                         <a href="{% url 'users' %}" class="menu-link{% if request.resolver_match.url_name == 'users' %} active{% endif %}">
                             <span class="material-symbols-outlined menu-icon">group</span>
                             <span class="title">Users</span>
                         </a>
+                    </li>
+                    <li class="menu-item{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} open{% endif %}">
+                        <a href="javascript:void(0);" class="menu-link menu-toggle{% if request.resolver_match.url_name in 'sms_rates,provider,sender_id,payment_gateway' %} active{% endif %}">
+                            <span class="material-symbols-outlined menu-icon">settings</span>
+                            <span class="title">Configuration</span>
+                        </a>
+                        <ul class="menu-sub">
+                            <li class="menu-item">
+                                <a href="{% url 'sms_rates' %}" class="menu-link{% if request.resolver_match.url_name == 'sms_rates' %} active{% endif %}">SMS Rates</a>
+                            </li>
+                            <li class="menu-item">
+                                <a href="{% url 'provider' %}" class="menu-link{% if request.resolver_match.url_name == 'provider' %} active{% endif %}">Provider</a>
+                            </li>
+                            <li class="menu-item">
+                                <a href="{% url 'sender_id' %}" class="menu-link{% if request.resolver_match.url_name == 'sender_id' %} active{% endif %}">Sender ID</a>
+                            </li>
+                            <li class="menu-item">
+                                <a href="{% url 'payment_gateway' %}" class="menu-link{% if request.resolver_match.url_name == 'payment_gateway' %} active{% endif %}">Payment Gateway</a>
+                            </li>
+                        </ul>
                     </li>
 
                     <li class="menu-title small text-uppercase{% if request.resolver_match.url_name in 'profile,change_password' %} open{% endif %}">

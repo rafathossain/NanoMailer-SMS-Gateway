@@ -231,6 +231,13 @@ class SenderID(models.Model):
         return f"{self.sender_id} ({self.provider.name})"
 
 
+def gateway_logo_path(instance, filename):
+    """Upload gateway logos to gateways/ directory with UUID filename"""
+    ext = filename.split('.')[-1].lower()
+    unique_filename = f"{uuid.uuid4().hex}.{ext}"
+    return f'gateways/{unique_filename}'
+
+
 class PaymentGateway(models.Model):
     """Payment Gateway configuration model"""
     GATEWAY_CHOICES = [
@@ -239,6 +246,12 @@ class PaymentGateway(models.Model):
     ]
     
     name = models.CharField(max_length=100, help_text='Gateway name (e.g., SSLCommerz Primary)')
+    logo = models.ImageField(
+        upload_to=gateway_logo_path,
+        blank=True,
+        null=True,
+        help_text='Gateway logo image (recommended size: 120x40px)'
+    )
     gateway_class = models.CharField(
         max_length=50,
         choices=GATEWAY_CHOICES,
@@ -257,7 +270,6 @@ class PaymentGateway(models.Model):
         help_text='Transaction Discount Rate (TDR) in percentage'
     )
     is_active = models.BooleanField(default=True, help_text='Is this gateway active?')
-    is_default = models.BooleanField(default=False, help_text='Set as default gateway')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -265,26 +277,26 @@ class PaymentGateway(models.Model):
         db_table = 'payment_gateways'
         verbose_name = 'Payment Gateway'
         verbose_name_plural = 'Payment Gateways'
-        ordering = ['-is_default', '-created_at']
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.name} ({self.gateway_class})"
 
-    def save(self, *args, **kwargs):
-        # If this gateway is set as default, unset others
-        if self.is_default:
-            PaymentGateway.objects.filter(is_default=True).update(is_default=False)
-        super().save(*args, **kwargs)
-
     @classmethod
     def get_default_gateway(cls):
-        """Get the default active gateway"""
-        return cls.objects.filter(is_active=True, is_default=True).first()
+        """Get the first active gateway (for backward compatibility)"""
+        return cls.objects.filter(is_active=True).first()
 
     @classmethod
     def get_active_gateways(cls):
         """Get all active gateways"""
         return cls.objects.filter(is_active=True)
+
+    @property
+    def credentials_json(self):
+        """Return credentials as formatted JSON string for textarea display"""
+        import json
+        return json.dumps(self.credentials, indent=2)
 
 
 class DefaultRate(models.Model):

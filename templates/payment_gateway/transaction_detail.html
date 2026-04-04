@@ -72,7 +72,12 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <span class="text-secondary fs-12 d-block">Payment Gateway</span>
-                            <span class="fw-medium">{{ transaction.gateway.name }}</span>
+                            <div class="d-flex align-items-center">
+                                {% if transaction.gateway.logo %}
+                                    <img src="{{ transaction.gateway.logo.url }}" alt="{{ transaction.gateway.name }}" style="max-height: 24px; max-width: 60px; object-fit: contain; margin-right: 8px;">
+                                {% endif %}
+                                <span class="fw-medium">{{ transaction.gateway.name }}</span>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <span class="text-secondary fs-12 d-block">Gateway Type</span>

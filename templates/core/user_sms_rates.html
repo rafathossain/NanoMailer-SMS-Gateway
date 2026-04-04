@@ -6,8 +6,12 @@
 
 {% block content %}
 <div class="main-content-container overflow-hidden">
+    <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-        <h3 class="mb-0">Configure User SMS Rates</h3>
+        <div>
+            <h3 class="mb-1">Configure User SMS Rates</h3>
+            <p class="text-secondary fs-14 mb-0">Set custom operator-wise SMS rates for {{ target_user.get_full_name|default:target_user.username }}</p>
+        </div>
         <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
             <ol class="breadcrumb align-items-center mb-0 lh-1">
                 <li class="breadcrumb-item">
@@ -26,72 +30,106 @@
         </nav>
     </div>
 
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success bg-success bg-opacity-10 border-0 text-success d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-error-warning-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <!-- User Info Card -->
     <div class="card bg-white border-0 rounded-3 mb-4">
         <div class="card-body p-4">
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center flex-wrap gap-4">
                 <div class="flex-shrink-0">
                     {% if target_user.profile.photo %}
                         <img class="rounded-circle" src="{{ target_user.profile.photo.url }}" alt="{{ target_user.get_full_name }}" style="width: 80px; height: 80px; object-fit: cover;">
                     {% else %}
-                        <img class="rounded-circle" src="{% static 'assets/images/administrator.jpg' %}" alt="{{ target_user.get_full_name }}" style="width: 80px; height: 80px; object-fit: cover;">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <span class="fw-bold text-primary fs-32">{{ target_user.get_full_name|first|upper|default:target_user.username|first|upper }}</span>
+                        </div>
                     {% endif %}
                 </div>
-                <div class="flex-grow-1 ms-4">
+                <div class="flex-grow-1">
                     <h4 class="fw-semibold mb-1">{{ target_user.get_full_name|default:target_user.username }}</h4>
                     <span class="text-secondary d-block mb-2">{{ target_user.email }}</span>
-                    <div class="d-flex gap-3">
-                        <span class="badge bg-success bg-opacity-10 text-success">
-                            <i class="ri-wallet-3-line me-1"></i>Balance: ৳{{ target_user.profile.balance|floatformat:2 }}
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fs-12">
+                            <i class="ri-wallet-3-line me-1"></i>Balance: ৳{{ target_user.profile.balance|default:"0.00"|floatformat:2 }}
                         </span>
                         {% if target_user.is_active %}
-                            <span class="badge bg-primary bg-opacity-10 text-primary">
-                                <i class="ri-check-line me-1"></i>Active
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fs-12">
+                                <i class="ri-check-line me-1"></i>Active User
                             </span>
                         {% else %}
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                <i class="ri-close-line me-1"></i>Inactive
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill fs-12">
+                                <i class="ri-close-line me-1"></i>Inactive User
                             </span>
                         {% endif %}
                     </div>
+                </div>
+                <div class="flex-shrink-0">
+                    <a href="{% url 'users' %}" class="btn btn-outline-secondary">
+                        <i class="ri-arrow-left-line me-1"></i>Back to Users
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Reference Rates Card -->
-    <div class="card bg-light border-0 rounded-3 mb-4">
+    <div class="card bg-info bg-opacity-10 border-0 rounded-3 mb-4">
         <div class="card-body p-4">
-            <h5 class="mb-3"><i class="ri-information-line me-2 text-info"></i>Default Provider Rates (Reference)</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-3">
-                        <span class="text-secondary">Default Masking Rate</span>
-                        <span class="fw-bold text-primary fs-18">৳ {{ default_masking_rate|floatformat:2 }}</span>
-                    </div>
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="ri-information-line fs-24 text-info"></i>
                 </div>
-                <div class="col-md-6">
-                    <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-3">
-                        <span class="text-secondary">Default Non-Masking Rate</span>
-                        <span class="fw-bold text-primary fs-18">৳ {{ default_non_masking_rate|floatformat:2 }}</span>
+                <div class="flex-grow-1 ms-3">
+                    <h6 class="fw-semibold mb-2">Default Provider Rates (Reference)</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-2 mb-md-0">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-3">
+                                <span class="text-secondary">Default Masking Rate</span>
+                                <span class="fw-bold text-primary fs-18">৳ {{ default_masking_rate|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-3">
+                                <span class="text-secondary">Default Non-Masking Rate</span>
+                                <span class="fw-bold text-primary fs-18">৳ {{ default_non_masking_rate|floatformat:2 }}</span>
+                            </div>
+                        </div>
                     </div>
+                    <p class="text-secondary fs-14 mt-3 mb-0">
+                        <i class="ri-lightbulb-line me-1"></i>
+                        Leave fields empty to use default provider rates. Custom rates set here will override defaults for this user only.
+                    </p>
                 </div>
             </div>
-            <p class="text-secondary fs-13 mt-3 mb-0">
-                <i class="ri-lightbulb-line me-1"></i>
-                Leave fields empty to use default provider rates. Custom rates set here will override defaults for this user only.
-            </p>
         </div>
     </div>
 
     <!-- SMS Rates Configuration Form -->
     <div class="card bg-white border-0 rounded-3 mb-4">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                <h3 class="mb-0">Operator-wise SMS Rates</h3>
-                <a href="{% url 'users' %}" class="btn btn-outline-secondary py-2 px-3">
-                    <i class="ri-arrow-left-line me-1"></i>Back to Users
-                </a>
+        <div class="card-body p-0">
+            <!-- Table Header -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4 border-bottom">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="ri-money-dollar-circle-line me-2 text-primary"></i>Operator-wise SMS Rates
+                </h5>
+                <span class="badge bg-light text-secondary fs-12">{{ operators|length }} operators</span>
             </div>
 
             <form method="POST" action="{% url 'user_sms_rates' target_user.id %}">
@@ -99,28 +137,33 @@
                 <input type="hidden" name="action" value="update_rates">
 
                 <div class="table-responsive">
-                    <table class="table align-middle" id="userRatesTable">
-                        <thead>
+                    <table class="table table-hover align-middle mb-0" id="userRatesTable">
+                        <thead class="bg-light">
                             <tr>
-                                <th scope="col">Operator</th>
-                                <th scope="col">Masking Rate (per SMS)</th>
-                                <th scope="col">Non-Masking Rate (per SMS)</th>
+                                <th class="ps-4 fw-semibold text-secondary fs-14">Operator</th>
+                                <th class="fw-semibold text-secondary fs-14">Masking Rate (per SMS)</th>
+                                <th class="pe-4 fw-semibold text-secondary fs-14">Non-Masking Rate (per SMS)</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for operator_key, operator_name in operators %}
                             {% with masking_key=operator_key|add:"_masking" non_masking_key=operator_key|add:"_non_masking" %}
                             <tr>
-                                <td>
+                                <td class="ps-4">
                                     <div class="d-flex align-items-center">
-                                        <div class="bg-primary bg-opacity-10 rounded-3 p-2 me-3">
-                                            <i class="ri-smartphone-line fs-20 text-primary"></i>
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-primary bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                                <i class="ri-smartphone-line fs-20 text-primary"></i>
+                                            </div>
                                         </div>
-                                        <span class="fw-medium">{{ operator_name }}</span>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="fw-semibold fs-14 mb-0">{{ operator_name }}</h6>
+                                            <span class="fs-12 text-secondary">{{ operator_key }}</span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="input-group">
+                                    <div class="input-group" style="max-width: 200px;">
                                         <span class="input-group-text bg-light">৳</span>
                                         <input type="number" 
                                                class="form-control" 
@@ -135,11 +178,13 @@
                                             <i class="ri-check-line me-1"></i>Custom: ৳{{ user_rates|get_item:masking_key|floatformat:2 }}
                                         </span>
                                     {% else %}
-                                        <span class="fs-12 text-secondary mt-1 d-block">Using default</span>
+                                        <span class="fs-12 text-secondary mt-1 d-block">
+                                            <i class="ri-information-line me-1"></i>Using default
+                                        </span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <div class="input-group">
+                                <td class="pe-4">
+                                    <div class="input-group" style="max-width: 200px;">
                                         <span class="input-group-text bg-light">৳</span>
                                         <input type="number" 
                                                class="form-control" 
@@ -154,7 +199,9 @@
                                             <i class="ri-check-line me-1"></i>Custom: ৳{{ user_rates|get_item:non_masking_key|floatformat:2 }}
                                         </span>
                                     {% else %}
-                                        <span class="fs-12 text-secondary mt-1 d-block">Using default</span>
+                                        <span class="fs-12 text-secondary mt-1 d-block">
+                                            <i class="ri-information-line me-1"></i>Using default
+                                        </span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -164,9 +211,11 @@
                     </table>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a href="{% url 'users' %}" class="btn btn-outline-secondary py-2 px-4">Cancel</a>
-                    <button type="submit" class="btn btn-primary py-2 px-4">
+                <div class="d-flex justify-content-end gap-2 p-4 border-top bg-light">
+                    <a href="{% url 'users' %}" class="btn btn-outline-secondary">
+                        <i class="ri-close-line me-1"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
                         <i class="ri-save-line me-1"></i>Save All Rates
                     </button>
                 </div>
@@ -176,11 +225,29 @@
 </div>
 
 <style>
-    #userRatesTable input[type="number"] {
-        max-width: 150px;
-    }
-    #userRatesTable .input-group {
-        max-width: 180px;
-    }
+#userRatesTable tbody tr:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.02);
+}
+#userRatesTable input[type="number"]:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Highlight changed inputs
+    const inputs = document.querySelectorAll('#userRatesTable input[type="number"]');
+    inputs.forEach(input => {
+        const originalValue = input.value;
+        input.addEventListener('change', function() {
+            if (this.value !== originalValue) {
+                this.classList.add('border-primary');
+            } else {
+                this.classList.remove('border-primary');
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
