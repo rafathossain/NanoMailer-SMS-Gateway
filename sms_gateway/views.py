@@ -57,8 +57,11 @@ def sms_log_detail_view(request, log_id):
     from .models import SMSLog
     
     try:
-        # Get the SMS log belonging to the current user
-        log = SMSLog.objects.get(id=log_id, user=request.user)
+        # Get the SMS log - superusers can view any log, regular users only their own
+        if request.user.is_superuser:
+            log = SMSLog.objects.get(id=log_id)
+        else:
+            log = SMSLog.objects.get(id=log_id, user=request.user)
         
         # Calculate rate per SMS
         rate_per_sms = log.cost / log.segments if log.segments > 0 else log.cost
