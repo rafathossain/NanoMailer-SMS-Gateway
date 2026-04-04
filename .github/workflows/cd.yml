@@ -30,4 +30,4 @@ jobs:
           script: |
             cd /home/NanoMailer-SMS-Gateway
             git stash && git pull origin main
-            cd /home/NanoMailer-SMS-Gateway && sh deploy.sh
+            cd /home/NanoMailer-SMS-Gateway && chmod +x *.sh && sh deploy.sh
