@@ -609,20 +609,28 @@ def send_sms_view(request):
 
 @login_required
 def sms_log_view(request):
-    """SMS Log view showing user's SMS history"""
+    """SMS Log view showing user's SMS history with pagination"""
     from sms_gateway.models import SMSLog
+    from django.core.paginator import Paginator
     
     # Get user's SMS logs
     sms_logs = SMSLog.objects.filter(user=request.user).order_by('-created_at')
     
-    # Calculate stats
+    # Calculate stats (on all logs, not just current page)
     total_sms = sms_logs.count()
     delivered_count = sms_logs.filter(status__in=['DELIVERED', 'SENT']).count()
     pending_count = sms_logs.filter(status__in=['PENDING', 'QUEUED']).count()
     failed_count = sms_logs.filter(status='FAILED').count()
     
+    # Pagination
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(sms_logs, 25)  # 25 logs per page
+    page_obj = paginator.get_page(page_number)
+    
     context = {
-        'sms_logs': sms_logs,
+        'sms_logs': page_obj,
+        'page_obj': page_obj,
+        'paginator': paginator,
         'total_sms': total_sms,
         'delivered_count': delivered_count,
         'pending_count': pending_count,
@@ -1036,6 +1044,7 @@ def admin_sms_log_view(request):
     """Admin SMS Log view - shows all SMS logs with user filter."""
     from sms_gateway.models import SMSLog
     from django.contrib.auth.models import User
+    from django.core.paginator import Paginator
     
     # Get all users for the dropdown
     users = User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username')
@@ -1051,6 +1060,9 @@ def admin_sms_log_view(request):
     pending_count = 0
     failed_count = 0
     
+    page_obj = None
+    paginator = None
+    
     if selected_user_id:
         try:
             selected_user = User.objects.get(id=selected_user_id)
@@ -1061,6 +1073,11 @@ def admin_sms_log_view(request):
             delivered_count = sms_logs.filter(status__in=['DELIVERED', 'SENT']).count()
             pending_count = sms_logs.filter(status__in=['PENDING', 'QUEUED']).count()
             failed_count = sms_logs.filter(status='FAILED').count()
+            
+            # Pagination
+            page_number = request.GET.get('page', 1)
+            paginator = Paginator(sms_logs, 25)  # 25 logs per page
+            page_obj = paginator.get_page(page_number)
         except User.DoesNotExist:
             messages.error(request, 'User not found.')
     
@@ -1068,7 +1085,9 @@ def admin_sms_log_view(request):
         'users': users,
         'selected_user': selected_user,
         'selected_user_id': selected_user_id,
-        'sms_logs': sms_logs,
+        'sms_logs': page_obj if page_obj else sms_logs,
+        'page_obj': page_obj,
+        'paginator': paginator,
         'total_sms': total_sms,
         'delivered_count': delivered_count,
         'pending_count': pending_count,

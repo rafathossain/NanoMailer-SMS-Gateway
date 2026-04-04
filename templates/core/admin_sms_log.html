@@ -350,6 +350,70 @@
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Pagination -->
+                {% if paginator and paginator.num_pages > 1 %}
+                <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                    <div class="text-secondary fs-13">
+                        Showing {{ sms_logs.start_index }}-{{ sms_logs.end_index }} of {{ paginator.count }} entries
+                    </div>
+                    <nav aria-label="SMS Log pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            {% if sms_logs.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?user_id={{ selected_user_id }}&page=1" aria-label="First">
+                                    <i class="ri-arrow-left-double-line"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?user_id={{ selected_user_id }}&page={{ sms_logs.previous_page_number }}" aria-label="Previous">
+                                    <i class="ri-arrow-left-s-line"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="ri-arrow-left-double-line"></i></span>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="ri-arrow-left-s-line"></i></span>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in paginator.page_range %}
+                                {% if page_num == sms_logs.number %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% elif page_num > sms_logs.number|add:'-3' and page_num < sms_logs.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?user_id={{ selected_user_id }}&page={{ page_num }}">{{ page_num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if sms_logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?user_id={{ selected_user_id }}&page={{ sms_logs.next_page_number }}" aria-label="Next">
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?user_id={{ selected_user_id }}&page={{ paginator.num_pages }}" aria-label="Last">
+                                    <i class="ri-arrow-right-double-line"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="ri-arrow-right-s-line"></i></span>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="ri-arrow-right-double-line"></i></span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

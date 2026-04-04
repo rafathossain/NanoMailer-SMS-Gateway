@@ -1,6 +1,9 @@
 import json
 import requests
 from decimal import Decimal
+
+from django.conf import settings
+
 from .gateway import PaymentGateway
 
 
@@ -41,6 +44,15 @@ class SSLCommerzGateway(PaymentGateway):
         # Calculate total amount with TDR
         tdr = kwargs.get('tdr', 0)
         total_amount = self.calculate_total_amount(amount, tdr)
+
+        success_url = kwargs.get('success_url', '')
+        fail_url = kwargs.get('fail_url', '')
+        cancel_url = kwargs.get('cancel_url', '')
+
+        if not settings.DEBUG:
+            success_url = str(success_url).replace('http://', 'https://')
+            fail_url = str(fail_url).replace('http://', 'https://')
+            cancel_url = str(cancel_url).replace('http://', 'https://')
         
         # Prepare payload
         payload = {
@@ -49,9 +61,9 @@ class SSLCommerzGateway(PaymentGateway):
             'total_amount': str(total_amount),
             'currency': kwargs.get('currency', 'BDT'),
             'tran_id': transaction_id,
-            'success_url': kwargs.get('success_url', ''),
-            'fail_url': kwargs.get('fail_url', ''),
-            'cancel_url': kwargs.get('cancel_url', ''),
+            'success_url': success_url,
+            'fail_url': fail_url,
+            'cancel_url': cancel_url,
             'ipn_url': kwargs.get('ipn_url', ''),
             'cus_name': customer_info.get('name', 'Customer'),
             'cus_email': customer_info.get('email', 'customer@example.com'),
