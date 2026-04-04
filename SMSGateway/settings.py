@@ -233,12 +233,13 @@ TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '')
 TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
 TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
-# sentry_sdk.init(
-#     dsn="https://3708ad40790b62f03503a11f9d7fd8e1@o4504179394281472.ingest.us.sentry.io/4511157571616768",
-#     # Add data like request headers and IP for users,
-#     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-#     send_default_pii=True,
-# )
+if not DEBUG:
+    sentry_sdk.init(
+        dsn="https://3708ad40790b62f03503a11f9d7fd8e1@o4504179394281472.ingest.us.sentry.io/4511157571616768",
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+    )
 
 # Django REST Framework settings
 REST_FRAMEWORK = {

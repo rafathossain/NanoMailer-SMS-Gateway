@@ -71,6 +71,7 @@
                         <thead>
                             <tr>
                                 <th>Provider</th>
+                                <th class="text-center">Default</th>
                                 <th>Balance</th>
                                 <th class="text-center">Masking</th>
                                 <th class="text-center">Non-Masking</th>
@@ -87,6 +88,17 @@
                                             <h6 class="fw-medium fs-14 mb-0 text-truncate">{{ provider.name }}</h6>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="text-center">
+                                    {% if provider.is_default %}
+                                    <span class="badge bg-success bg-opacity-10 text-success fs-12">
+                                        <i class="ri-check-line me-1"></i>Default
+                                    </span>
+                                    {% else %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12" onclick="setDefaultProvider({{ provider.id }}, '{{ provider.name|escapejs }}')">
+                                        Set Default
+                                    </button>
+                                    {% endif %}
                                 </td>
                                 <td class="text-secondary">
                                     ৳ {{ provider.balance|floatformat:2 }}
@@ -112,7 +124,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-secondary">
+                                <td colspan="6" class="text-center py-4 text-secondary">
                                     <i class="ri-inbox-line fs-24 mb-2 d-block"></i>
                                     No providers found. Click "Add Provider" to create one.
                                 </td>
@@ -433,6 +445,46 @@
         form.appendChild(providerIdInput);
         document.body.appendChild(form);
         form.submit();
+    }
+
+    function setDefaultProvider(providerId, providerName) {
+        Swal.fire({
+            title: 'Set as Default?',
+            text: 'Make "' + providerName + '" the default provider?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, set as default!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '{% url "provider" %}';
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrfmiddlewaretoken';
+                csrfToken.value = '{{ csrf_token }}';
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'set_default';
+                
+                const providerIdInput = document.createElement('input');
+                providerIdInput.type = 'hidden';
+                providerIdInput.name = 'provider_id';
+                providerIdInput.value = providerId;
+                
+                form.appendChild(csrfToken);
+                form.appendChild(actionInput);
+                form.appendChild(providerIdInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     }
 
     function deleteProvider(providerId, providerName) {

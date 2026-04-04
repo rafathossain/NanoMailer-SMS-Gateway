@@ -185,6 +185,10 @@ class SMSProvider(models.Model):
         help_text='Last time balance was synced'
     )
     is_active = models.BooleanField(default=True, help_text='Is this provider active?')
+    is_default = models.BooleanField(
+        default=False, 
+        help_text='Is this the default provider? Only one provider can be default at a time.'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -192,10 +196,11 @@ class SMSProvider(models.Model):
         db_table = 'sms_providers'
         verbose_name = 'SMS Provider'
         verbose_name_plural = 'SMS Providers'
-        ordering = ['-created_at']
+        ordering = ['-is_default', '-created_at']
 
     def __str__(self):
-        return f"{self.name} ({self.provider_class})"
+        default_tag = ' [DEFAULT]' if self.is_default else ''
+        return f"{self.name} ({self.provider_class}){default_tag}"
 
     @property
     def credentials_json(self):
@@ -204,10 +209,17 @@ class SMSProvider(models.Model):
             return json.dumps(self.credentials, indent=2)
         return ''
 
+    def save(self, *args, **kwargs):
+        """Override save to ensure only one provider is default at a time"""
+        if self.is_default:
+            # Set all other providers to non-default
+            SMSProvider.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
     @classmethod
     def get_default_provider(cls):
-        """Get the first provider as default"""
-        return cls.objects.first()
+        """Get the default provider"""
+        return cls.objects.filter(is_default=True).first() or cls.objects.first()
 
     @classmethod
     def get_active_providers(cls):

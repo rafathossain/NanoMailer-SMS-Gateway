@@ -310,8 +310,21 @@ def provider_view(request):
                 messages.error(request, f'Error syncing balance: {str(e)}')
             
             return redirect('provider')
+        
+        elif action == 'set_default':
+            provider_id = request.POST.get('provider_id')
+            
+            try:
+                provider = SMSProvider.objects.get(id=provider_id)
+                provider.is_default = True
+                provider.save()
+                messages.success(request, f'"{provider.name}" is now the default provider.')
+            except SMSProvider.DoesNotExist:
+                messages.error(request, 'Provider not found.')
+            
+            return redirect('provider')
     
-    providers = SMSProvider.objects.all().order_by('-created_at')
+    providers = SMSProvider.objects.all().order_by('-is_default', '-created_at')
     context = {
         'providers': providers,
         'provider_choices': SMSProvider.PROVIDER_CHOICES,
