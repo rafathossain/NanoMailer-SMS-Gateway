@@ -266,9 +266,16 @@
                     </div>
                 </div>
                 <div class="api-key-body">
-                    <div class="api-key-label">API Key</div>
+                    <div class="api-key-label d-flex justify-content-between align-items-center">
+                        <span>API Key</span>
+                        {% if api_key_created_at %}
+                        <span class="fs-12 fw-normal text-secondary">
+                            <i class="ri-calendar-line me-1"></i>Created: {{ api_key_created_at|date:"M d, Y H:i" }}
+                        </span>
+                        {% endif %}
+                    </div>
                     <div class="api-key-display">
-                        <span class="api-key-value" id="apiKeyValue">{{ api_key|default:'sg_live_********************************' }}</span>
+                        <span class="api-key-value" id="apiKeyValue">sg_live_********************************</span>
                         <div class="api-key-actions">
                             <button class="api-key-btn visibility" onclick="toggleVisibility()" data-bs-toggle="tooltip" title="Show/Hide">
                                 <i class="ri-eye-line" id="visibilityIcon"></i>
@@ -278,8 +285,22 @@
                             </button>
                         </div>
                     </div>
-
-    
+                    {% if api_key_last_used %}
+                    <div class="mt-2 fs-12 text-secondary">
+                        <i class="ri-time-line me-1"></i>Last used: {{ api_key_last_used|date:"M d, Y H:i" }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Base URL -->
+                    <div class="mt-3 p-3 bg-light rounded" style="background: #f8fafc !important;">
+                        <div class="fs-12 text-secondary mb-1"><i class="ri-global-line me-1"></i>Base URL</div>
+                        <div class="d-flex align-items-center">
+                            <code class="fs-14 text-primary" style="background: transparent;">{{ request.scheme }}://{{ request.get_host }}</code>
+                            <button class="btn btn-sm btn-link text-secondary p-0 ms-2" onclick="copyBaseUrl()" title="Copy Base URL">
+                                <i class="ri-file-copy-line"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -390,6 +411,18 @@
                 <div class="security-title">Monitor Usage</div>
                 <div class="security-text">Regularly check your SMS logs for unauthorized activity.</div>
             </div>
+
+            <!-- View Full Documentation -->
+            <div class="security-card mt-4" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                <div class="security-icon" style="background: #3b82f6;">
+                    <i class="ri-book-open-line fs-24 text-white"></i>
+                </div>
+                <div class="security-title">View API Documentation</div>
+                <div class="security-text">Explore interactive Swagger documentation with examples.</div>
+                <a href="{% url 'api:swagger-ui' %}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                    <i class="ri-external-link-line me-1"></i>Open Documentation
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -415,12 +448,16 @@
                     Make sure to update your applications with the new key before proceeding.
                 </div>
             </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning" onclick="rotateKey()">
-                    <i class="ri-refresh-line me-1"></i> Yes, Rotate Key
-                </button>
-            </div>
+            <form method="post" action="{% url 'api_key' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rotate">
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="ri-refresh-line me-1"></i> Yes, Rotate Key
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -445,6 +482,22 @@
             iconElement.classList.remove('ri-eye-off-line');
             iconElement.classList.add('ri-eye-line');
         }
+    }
+
+    function copyBaseUrl() {
+        const baseUrl = '{{ request.scheme }}://{{ request.get_host }}';
+        navigator.clipboard.writeText(baseUrl).then(function() {
+            // Show success feedback
+            const btn = document.querySelector('button[onclick="copyBaseUrl()"]');
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="ri-check-line"></i>';
+            btn.classList.add('text-success');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalIcon;
+                btn.classList.remove('text-success');
+            }, 2000);
+        });
     }
 
     function copyApiKey() {

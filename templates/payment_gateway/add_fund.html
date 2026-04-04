@@ -100,9 +100,9 @@
                                     <label class="label text-secondary">Enter Custom Amount</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-end-0">৳</span>
-                                        <input type="number" class="form-control h-55" id="customAmount" name="custom_amount" placeholder="Enter amount" min="10" step="1">
+                                        <input type="number" class="form-control h-55" id="customAmount" name="custom_amount" placeholder="Enter amount" min="100" step="1">
                                     </div>
-                                    <span class="fs-12 text-secondary mt-1 d-block">Minimum recharge amount is ৳ 10</span>
+                                    <span class="fs-12 text-secondary mt-1 d-block">Minimum recharge amount is ৳ 100</span>
                                 </div>
                             </div>
 
@@ -313,8 +313,19 @@
         // Update summary display
         function updateSummary() {
             const chargeRate = selectedGatewayTdr / 100;
-            const chargeAmount = selectedAmount * chargeRate;
-            const totalAmount = selectedAmount + chargeAmount;
+            
+            // Apply formula: X = A / (1 - r)
+            // Where A = desired amount (what user wants to receive), r = fee rate
+            // This ensures user receives exactly the amount they entered after fee deduction
+            let totalAmount, chargeAmount;
+            if (chargeRate < 1) {
+                totalAmount = selectedAmount / (1 - chargeRate);
+                chargeAmount = totalAmount - selectedAmount;
+            } else {
+                totalAmount = selectedAmount;
+                chargeAmount = 0;
+            }
+            
             const creditAmount = selectedAmount;
 
             summaryAmount.textContent = formatCurrency(selectedAmount);
@@ -369,9 +380,9 @@
         // Form submission
         form.addEventListener('submit', function(e) {
             // Validate amount
-            if (selectedAmount < 10) {
+            if (selectedAmount < 100) {
                 e.preventDefault();
-                alert('Minimum recharge amount is ৳ 10');
+                alert('Minimum recharge amount is ৳ 100');
                 return false;
             }
 

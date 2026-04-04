@@ -61,23 +61,15 @@
                             </div>
                             <div class="col-12">
                                 <div class="form-group mb-4">
-                                    <label class="label text-secondary">SMS Type</label>
-                                    <select class="form-select form-control h-55" aria-label="SMS Type" name="sms_type">
-                                        <option value="masking">Masking</option>
-                                        <option value="non-masking">Non-Masking</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group mb-4">
-                                    <label class="label text-secondary">Sender ID</label>
-                                    <select class="form-select form-control h-55" aria-label="Sender ID" name="sender_id">
+                                    <label class="label text-secondary">Sender ID <span class="fs-12 text-secondary">(Numeric = Non-Masking, Text = Masking)</span></label>
+                                    <select class="form-select form-control h-55" aria-label="Sender ID" name="sender_id" required>
                                         {% if user_sender_ids %}
+                                            <option value="" selected disabled>-- Select Sender ID --</option>
                                             {% for user_sender_id in user_sender_ids %}
                                             <option value="{{ user_sender_id.sender_id.sender_id }}">{{ user_sender_id.sender_id.sender_id }}</option>
                                             {% endfor %}
                                         {% else %}
-                                            <option selected disabled>No sender IDs assigned</option>
+                                            <option value="" selected disabled>No sender IDs assigned</option>
                                         {% endif %}
                                     </select>
                                     {% if not user_sender_ids %}
@@ -213,11 +205,11 @@
                     </div>
                     <div class="cost-breakdown-item">
                         <span class="label"><i class="ri-shield-check-line"></i>Type</span>
-                        <span class="value" id="smsTypeDisplay">Masking</span>
+                        <span class="value" id="smsTypeDisplay">Non-Masking</span>
                     </div>
                     <div class="cost-breakdown-item">
                         <span class="label"><i class="ri-message-3-line"></i>SMS Count</span>
-                        <span class="value"><span id="smsCountDisplay">0</span> parts</span>
+                        <span class="value"><span id="smsCountDisplay">0</span> SMS</span>
                     </div>
                 </div>
             </div>
@@ -396,11 +388,18 @@
         const contentTypeEl = document.getElementById('contentType');
         const charLimitEl = document.getElementById('charLimit');
         const recipientInput = document.querySelector('input[name="recipient"]');
-        const smsTypeSelect = document.querySelector('select[name="sms_type"]');
+        const senderIdSelect = document.querySelector('select[name="sender_id"]');
         const recipientCountEl = document.getElementById('recipientCount');
         const smsTypeDisplayEl = document.getElementById('smsTypeDisplay');
         const smsCountDisplayEl = document.getElementById('smsCountDisplay');
         const totalCostEl = document.getElementById('totalCost');
+
+        // Detect SMS type from sender_id
+        function detectSMSType(senderId) {
+            if (!senderId) return 'masking';
+            // If sender_id contains only digits, it's non-masking
+            return /^\d+$/.test(senderId.trim()) ? 'non_masking' : 'masking';
+        }
 
         // User rates from server - mapped by operator code
         const userRates = {
@@ -518,7 +517,8 @@
             const text = messageInput.value;
             const result = calculateSMS(text);
             const recipientResult = validateRecipients();
-            const smsType = smsTypeSelect.value;
+            const senderId = senderIdSelect.value;
+            const smsType = detectSMSType(senderId);
             
             charCountEl.textContent = text.length;
             smsCountEl.textContent = result.count;
@@ -581,22 +581,13 @@
                 return;
             }
             
-            const senderIdSelect = document.querySelector('select[name="sender_id"]');
-            if (!senderIdSelect.value || senderIdSelect.value === 'No sender IDs assigned') {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'No Sender ID',
-                    text: 'No sender ID assigned. Please contact admin.',
-                    confirmButtonColor: '#dc3545'
-                });
-                return;
-            }
+            // HTML5 validation will handle required fields
+            console.log('Form validation passed, submitting...');
         });
 
         messageInput.addEventListener('input', updateCounter);
         recipientInput.addEventListener('input', updateCounter);
-        smsTypeSelect.addEventListener('change', updateCounter);
+        senderIdSelect.addEventListener('change', updateCounter);
     });
 </script>
 {% endblock %}

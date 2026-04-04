@@ -13,8 +13,10 @@ class SSLCommerzGateway(PaymentGateway):
     def __init__(self, credentials):
         super().__init__(credentials)
         self.store_id = credentials.get('store_id')
-        self.store_pass = credentials.get('store_pass')
-        self.is_sandbox = credentials.get('is_sandbox', True)
+        # Support both 'store_pass' and 'store_passwd' keys
+        self.store_pass = credentials.get('store_pass') or credentials.get('store_passwd')
+        # Support both 'is_sandbox' and 'issandbox' keys
+        self.is_sandbox = credentials.get('is_sandbox', credentials.get('issandbox', True))
         self.base_url = self.SANDBOX_BASE_URL if self.is_sandbox else self.LIVE_BASE_URL
     
     def initiate_payment(self, transaction_id, amount, customer_info, **kwargs):

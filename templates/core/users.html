@@ -133,7 +133,14 @@
                                             </div>
                                         {% endif %}
                                         <div class="ms-2 ps-1 overflow-hidden text-truncate">
-                                            <h6 class="fw-medium fs-14 mb-0 text-truncate">{{ user.get_full_name|default:user.username }}</h6>
+                                            <h6 class="fw-medium fs-14 mb-0 text-truncate d-flex align-items-center gap-1">
+                                                {{ user.get_full_name|default:user.username }}
+                                                {% if user.is_superuser %}
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning px-1 rounded-pill" title="Superuser">
+                                                        <i class="ri-shield-star-fill"></i>
+                                                    </span>
+                                                {% endif %}
+                                            </h6>
                                         </div>
                                     </div>
                                 </td>

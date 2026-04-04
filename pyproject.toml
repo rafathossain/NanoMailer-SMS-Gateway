@@ -10,4 +10,8 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "requests>=2.33.1",
     "sentry-sdk>=2.57.0",
+    "djangorestframework>=3.17.1",
+    "drf-spectacular>=0.29.0",
+    "celery>=5.6.3",
+    "redis>=7.4.0",
 ]

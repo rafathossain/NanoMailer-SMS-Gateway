@@ -57,10 +57,19 @@ def initiate_payment(user, amount, customer_info, success_url, fail_url, cancel_
             'message': str(e)
         }
     
-    # Calculate amounts
+    # Calculate amounts using formula: X = A / (1 - r)
+    # Where A = desired amount (what user wants to receive), r = fee rate
+    # This ensures user receives exactly the amount they entered after fee deduction
     tdr = gateway_config.tdr or Decimal('0.00')
-    tdr_amount = (Decimal(str(amount)) * tdr) / 100
-    total_amount = Decimal(str(amount)) + tdr_amount
+    tdr_rate = tdr / 100  # Convert percentage to decimal
+    
+    if tdr_rate < 1:
+        total_amount = Decimal(str(amount)) / (1 - tdr_rate)
+        tdr_amount = total_amount - Decimal(str(amount))
+    else:
+        # Fallback if TDR is 100% or more (shouldn't happen)
+        total_amount = Decimal(str(amount))
+        tdr_amount = Decimal('0.00')
     
     # Generate transaction ID
     transaction_id = Transaction.generate_transaction_id()

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
@@ -17,6 +17,7 @@ def dashboard_view(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
 def sms_rates_view(request):
     """View for managing SMS rates for all operators."""
     default_rate = DefaultRate.get_instance()
@@ -82,6 +83,7 @@ def sms_rates_view(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
 def provider_view(request):
     if request.method == 'POST':
         action = request.POST.get('action', '')
@@ -253,6 +255,7 @@ def provider_view(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
 def sender_id_view(request):
     if request.method == 'POST':
         action = request.POST.get('action', '')
@@ -297,6 +300,7 @@ def sender_id_view(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
 def payment_gateway_view(request):
     if request.method == 'POST':
         action = request.POST.get('action', '')
@@ -417,7 +421,62 @@ def payment_gateway_view(request):
 def send_sms_view(request):
     """Send SMS view with user's assigned sender IDs and rates"""
     from sms_gateway.models import UserSMSRate
+    from sms_gateway.services import process_sms_request
     
+    # Handle POST request - send SMS
+    if request.method == 'POST':
+        recipient = request.POST.get('recipient', '').strip()
+        message = request.POST.get('message', '').strip()
+        sender_id = request.POST.get('sender_id', '').strip()
+        
+        general_logger.info(f"SMS send request - User: {request.user}, Recipient: {recipient}, SenderID: {sender_id}")
+        
+        if not recipient or not message:
+            messages.error(request, 'Recipient and message are required')
+            general_logger.warning(f"SMS send failed - missing recipient or message")
+            return redirect('send_sms')
+        
+        try:
+            # Process SMS request using the service
+            result = process_sms_request(
+                user=request.user,
+                recipient=recipient,
+                message=message,
+                sender_id=sender_id if sender_id else None,
+                skip_queue=False  # Will queue to Celery
+            )
+            
+            general_logger.info(f"SMS send result: {result}")
+            
+            if result.get('success'):
+                total_recipients = result.get('total_recipients', 1)
+                if total_recipients > 1:
+                    messages.success(
+                        request, 
+                        f"{result.get('successful', 0)} of {total_recipients} SMS queued successfully. "
+                        f"Cost: ৳{result.get('total_cost', 0)}."
+                    )
+                else:
+                    messages.success(
+                        request, 
+                        f"SMS queued successfully! Cost: ৳{result.get('total_cost', 0)}."
+                    )
+            else:
+                total_recipients = result.get('total_recipients', 1)
+                if total_recipients > 1:
+                    messages.error(
+                        request, 
+                        f"Failed to send {total_recipients} SMS: {result.get('message')}"
+                    )
+                else:
+                    messages.error(request, f'Failed to send SMS: {result.get("message")}')
+        except Exception as e:
+            general_logger.exception(f"Error processing SMS send request: {str(e)}")
+            messages.error(request, f'An error occurred: {str(e)}')
+        
+        return redirect('send_sms')
+    
+    # GET request - render form
     # Get user's assigned sender IDs
     user_sender_ids = UserSenderID.objects.select_related('sender_id', 'sender_id__provider').filter(
         user=request.user, 
@@ -472,7 +531,26 @@ def send_sms_view(request):
 
 @login_required
 def sms_log_view(request):
-    return render(request, 'core/sms_log.html')
+    """SMS Log view showing user's SMS history"""
+    from sms_gateway.models import SMSLog
+    
+    # Get user's SMS logs
+    sms_logs = SMSLog.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Calculate stats
+    total_sms = sms_logs.count()
+    delivered_count = sms_logs.filter(status__in=['DELIVERED', 'SENT']).count()
+    pending_count = sms_logs.filter(status__in=['PENDING', 'QUEUED']).count()
+    failed_count = sms_logs.filter(status='FAILED').count()
+    
+    context = {
+        'sms_logs': sms_logs,
+        'total_sms': total_sms,
+        'delivered_count': delivered_count,
+        'pending_count': pending_count,
+        'failed_count': failed_count,
+    }
+    return render(request, 'core/sms_log.html', context)
 
 
 @login_required
@@ -489,7 +567,43 @@ def add_fund_view(request):
 
 @login_required
 def api_key_view(request):
-    return render(request, 'core/api_key.html')
+    """API Key management view"""
+    from sms_gateway.models import APIKey
+    from sms_gateway.authentication import APIKeyManager
+    
+    # Handle key rotation
+    if request.method == 'POST' and request.POST.get('action') == 'rotate':
+        # Revoke existing active keys
+        APIKey.objects.filter(user=request.user, is_active=True).update(
+            is_active=False,
+            revoked_at=timezone.now()
+        )
+        
+        # Create new key
+        api_key = APIKeyManager.create_api_key(
+            user=request.user,
+            name='Default'
+        )
+        
+        messages.success(request, 'API key rotated successfully. Your old key is now invalid.')
+        return redirect('api_key')
+    
+    # Get or create API key
+    api_key = APIKey.objects.filter(user=request.user, is_active=True).first()
+    
+    if not api_key:
+        # Create a new API key for the user
+        api_key = APIKeyManager.create_api_key(
+            user=request.user,
+            name='Default'
+        )
+    
+    context = {
+        'api_key': api_key.key,
+        'api_key_created_at': api_key.created_at,
+        'api_key_last_used': api_key.last_used_at,
+    }
+    return render(request, 'core/api_key.html', context)
 
 
 @login_required
@@ -652,6 +766,7 @@ def change_password_view(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
 def users_view(request):
     from django.contrib.auth.models import User
     
@@ -678,6 +793,7 @@ def users_view(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
 def user_sms_rates_view(request, user_id):
     """View for configuring user-specific SMS rates per operator"""
     from django.contrib.auth.models import User

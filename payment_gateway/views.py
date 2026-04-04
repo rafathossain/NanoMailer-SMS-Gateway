@@ -35,8 +35,8 @@ def add_fund_view(request):
                 messages.error(request, 'Please enter a valid amount')
                 return redirect('payment_gateway:add_fund')
             
-            if amount < 10:
-                messages.error(request, 'Minimum recharge amount is 10 BDT')
+            if amount < 100:
+                messages.error(request, 'Minimum recharge amount is 100 BDT')
                 return redirect('payment_gateway:add_fund')
             
             # Get selected gateway

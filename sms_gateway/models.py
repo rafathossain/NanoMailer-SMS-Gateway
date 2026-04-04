@@ -3,6 +3,7 @@ SMS Gateway models
 """
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 from core.models import SMSProvider
 
 
@@ -10,9 +11,26 @@ class SMSLog(models.Model):
     """Log of sent SMS messages"""
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
+        ('QUEUED', 'Queued'),
         ('SENT', 'Sent'),
         ('DELIVERED', 'Delivered'),
         ('FAILED', 'Failed'),
+    ]
+    
+    # Operator choices for Bangladesh
+    OPERATOR_CHOICES = [
+        ('grameenphone', 'Grameenphone'),
+        ('banglalink', 'Banglalink'),
+        ('robi', 'Robi'),
+        ('airtel', 'Airtel'),
+        ('teletalk', 'Teletalk'),
+        ('unknown', 'Unknown'),
+    ]
+    
+    # Message type choices
+    MESSAGE_TYPE_CHOICES = [
+        ('masking', 'Masking'),
+        ('non_masking', 'Non-Masking'),
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sms_logs')
@@ -22,6 +40,12 @@ class SMSLog(models.Model):
     recipient = models.CharField(max_length=20, help_text='Phone number')
     message = models.TextField()
     sender_id = models.CharField(max_length=20, default='NanoMailer')
+    message_type = models.CharField(
+        max_length=20,
+        choices=MESSAGE_TYPE_CHOICES,
+        default='masking',
+        help_text='Auto-detected from sender_id: numeric=non-masking, alphabetic=masking'
+    )
     
     # Status tracking
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
@@ -34,6 +58,26 @@ class SMSLog(models.Model):
     # Cost tracking
     segments = models.PositiveIntegerField(default=1)
     cost = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    
+    # Operator identification
+    operator = models.CharField(
+        max_length=20, 
+        choices=OPERATOR_CHOICES, 
+        default='unknown',
+        help_text='Mobile operator identified from recipient number'
+    )
+    
+    # Balance deduction tracking
+    balance_deducted = models.BooleanField(
+        default=False,
+        help_text='Whether balance has been deducted for this SMS'
+    )
+    deducted_amount = models.DecimalField(
+        max_digits=10, 
+        decimal_places=4, 
+        default=0,
+        help_text='Amount deducted from user balance'
+    )
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -92,6 +136,43 @@ class SMSQueue(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.status} ({self.processed_count}/{self.total_recipients})"
+
+
+class APIKey(models.Model):
+    """
+    API Key model for authenticating API requests.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_keys')
+    key = models.CharField(max_length=100, unique=True, db_index=True, help_text='The API key')
+    name = models.CharField(max_length=100, default='Default', help_text='Name/description for this API key')
+    
+    # Status tracking
+    is_active = models.BooleanField(default=True, help_text='Is this API key active?')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True, help_text='Expiration date (null for no expiration)')
+    last_used_at = models.DateTimeField(null=True, blank=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'api_keys'
+        verbose_name = 'API Key'
+        verbose_name_plural = 'API Keys'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} ({self.user.username})"
+    
+    def is_expired(self):
+        """Check if the API key has expired"""
+        if self.expires_at and self.expires_at < timezone.now():
+            return True
+        return False
+    
+    def revoke(self):
+        """Revoke this API key"""
+        self.is_active = False
+        self.revoked_at = timezone.now()
+        self.save(update_fields=['is_active', 'revoked_at'])
 
 
 class UserSMSRate(models.Model):

@@ -30,6 +30,9 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
+# Test mode - when True, SMS is processed synchronously without Celery
+TEST_MODE = os.getenv('TEST_MODE', 'False').lower() in ('true', '1', 'yes')
+
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 # Application definition
@@ -41,10 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'drf_spectacular',
     'core',
     'authentication',
     'payment_gateway',
     'sms_gateway',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -212,3 +218,63 @@ TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverif
 #     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
 #     send_default_pii=True,
 # )
+
+# Django REST Framework settings
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "sms_gateway.authentication.APIKeyAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 20,
+    "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+
+
+# drf-spectacular (Swagger/OpenAPI) settings
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SMS Gateway API",
+    "DESCRIPTION": "REST API for sending SMS, checking balance, and managing SMS logs",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/",
+    "TAGS": [
+        {"name": "SMS", "description": "SMS sending and management"},
+        {"name": "Balance", "description": "Balance operations"},
+    ],
+    "EXAMPLES_COMPONENT_SPLIT_REQUEST": True,
+    "SECURITY": [
+        {"ApiKeyAuth": []},
+    ],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-Key",
+                "description": "API Key authentication. Get your API key from the developer dashboard.",
+            }
+        }
+    },
+}
+
+
+
+# Celery Configuration
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 300  # 5 minutes
+

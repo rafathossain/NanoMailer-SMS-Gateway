@@ -26,7 +26,8 @@ urlpatterns = [
     path('', include('authentication.urls')),
     path('', include('core.urls')),
     path('billings/', include('payment_gateway.urls')),
-    path('sms/', include('sms_gateway.urls'))
+    path('sms/', include('sms_gateway.urls')),
+    path('api/', include('api.urls'))
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -149,7 +149,7 @@
                 </div>
                 <div class="stat-content">
                     <div class="stat-value">{{ delivered_count|default:"0" }}</div>
-                    <div class="stat-label">Delivered</div>
+                    <div class="stat-label">Delivered/Sent</div>
                 </div>
             </div>
         </div>
@@ -226,15 +226,23 @@
                                 <td class="text-secondary">{{ log.recipient }}</td>
                                 <td class="text-secondary">{{ log.message|truncatechars:80 }}</td>
                                 <td class="text-center">
-                                    {% if log.status == 'delivered' %}
+                                    {% if log.status == 'DELIVERED' %}
                                     <span class="badge bg-success bg-opacity-10 text-success fs-12">
                                         <i class="ri-check-line me-1"></i>Delivered
                                     </span>
-                                    {% elif log.status == 'pending' %}
+                                    {% elif log.status == 'SENT' %}
+                                    <span class="badge bg-info bg-opacity-10 text-info fs-12">
+                                        <i class="ri-check-line me-1"></i>Sent
+                                    </span>
+                                    {% elif log.status == 'QUEUED' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary fs-12">
+                                        <i class="ri-time-line me-1"></i>Queued
+                                    </span>
+                                    {% elif log.status == 'PENDING' %}
                                     <span class="badge bg-warning bg-opacity-10 text-warning fs-12">
                                         <i class="ri-time-line me-1"></i>Pending
                                     </span>
-                                    {% elif log.status == 'failed' %}
+                                    {% elif log.status == 'FAILED' %}
                                     <span class="badge bg-danger bg-opacity-10 text-danger fs-12">
                                         <i class="ri-close-line me-1"></i>Failed
                                     </span>
@@ -271,13 +279,13 @@
 
 <!-- View SMS Details Modal -->
 <div class="modal fade" id="viewSMSModal" tabindex="-1" aria-labelledby="viewSMSModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="viewSMSModalLabel">SMS Details</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="smsDetailsContent">
+            <div class="modal-body p-4" id="smsDetailsContent">
                 <div class="text-center py-4">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
@@ -297,47 +305,99 @@
         const modal = new bootstrap.Modal(document.getElementById('viewSMSModal'));
         modal.show();
         
-        // Fetch SMS details via AJAX (placeholder for actual implementation)
-        fetch(`/api/sms-log/${logId}/`)
+        // Fetch SMS details via AJAX
+        fetch(`/sms/api/sms-log/${logId}/`)
             .then(response => response.json())
             .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to load SMS details');
+                }
+                
                 const content = document.getElementById('smsDetailsContent');
+                
+                // Format operator name
+                const operatorNames = {
+                    'grameenphone': 'Grameenphone',
+                    'banglalink': 'Banglalink',
+                    'robi': 'Robi',
+                    'airtel': 'Airtel',
+                    'teletalk': 'Teletalk',
+                    'unknown': 'Unknown'
+                };
+                const operatorName = operatorNames[data.operator] || data.operator;
+                
+                // Status badge
+                const statusBadge = `<span class="badge bg-${data.status === 'DELIVERED' ? 'success' : data.status === 'SENT' ? 'info' : data.status === 'QUEUED' ? 'primary' : data.status === 'PENDING' ? 'warning' : 'danger'} bg-opacity-10 text-${data.status === 'DELIVERED' ? 'success' : data.status === 'SENT' ? 'info' : data.status === 'QUEUED' ? 'primary' : data.status === 'PENDING' ? 'warning' : 'danger'} fs-12">${data.status.charAt(0) + data.status.slice(1).toLowerCase()}</span>`;
+                
+                // Build failure reason row for failed SMS
+                let failureReasonRow = '';
+                if (data.status === 'FAILED') {
+                    const failureReason = data.error_message || 'Unknown error occurred';
+                    failureReasonRow = `
+                        <tr class="border-bottom bg-danger bg-opacity-10">
+                            <td class="fw-medium text-danger" style="width: 35%;"><i class="ri-error-warning-line me-1"></i>Failure Reason</td>
+                            <td class="text-danger fw-medium">${failureReason}</td>
+                        </tr>
+                    `;
+                }
+                
                 content.innerHTML = `
-                    <div class="mb-3">
-                        <label class="form-label text-secondary">Recipient</label>
-                        <p class="fw-medium mb-0">${data.recipient}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-secondary">Sender ID</label>
-                        <p class="fw-medium mb-0">${data.sender_id}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-secondary">Message</label>
-                        <p class="mb-0">${data.message}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-secondary">Status</label>
-                        <p class="mb-0">
-                            <span class="badge bg-${data.status === 'delivered' ? 'success' : data.status === 'pending' ? 'warning' : 'danger'} bg-opacity-10 text-${data.status === 'delivered' ? 'success' : data.status === 'pending' ? 'warning' : 'danger'} fs-12">
-                                ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}
-                            </span>
-                        </p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-secondary">Cost</label>
-                        <p class="fw-medium mb-0">৳ ${data.cost}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-secondary">Sent At</label>
-                        <p class="fw-medium mb-0">${data.created_at}</p>
-                    </div>
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary" style="width: 35%;">Log ID</td>
+                                <td>#${data.id}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Recipient</td>
+                                <td class="fw-medium">${data.recipient}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Sender ID</td>
+                                <td><span class="badge bg-primary bg-opacity-10 text-primary">${data.sender_id}</span></td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">SMS Type</td>
+                                <td><span class="badge bg-${data.message_type === 'masking' ? 'success' : 'warning'} bg-opacity-10 text-${data.message_type === 'masking' ? 'success' : 'warning'}">${data.message_type === 'masking' ? 'Masking' : 'Non-Masking'}</span></td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Operator</td>
+                                <td>${operatorName}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Message</td>
+                                <td style="white-space: pre-wrap;">${data.message}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Status</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                            ${failureReasonRow}
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Segments</td>
+                                <td>${data.segments} SMS</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Cost</td>
+                                <td class="fw-medium">৳ ${data.cost} <span class="text-secondary fs-12">(৳ ${data.rate_per_sms}/SMS)</span></td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="fw-medium text-secondary">Balance Deducted</td>
+                                <td>${data.balance_deducted ? '<span class="text-success"><i class="ri-check-line"></i> Yes (৳ ' + data.deducted_amount + ')</span>' : '<span class="text-secondary"><i class="ri-close-line"></i> No</span>'}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-secondary">Sent At</td>
+                                <td>${data.created_at}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 `;
             })
             .catch(error => {
                 document.getElementById('smsDetailsContent').innerHTML = `
                     <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger" role="alert">
                         <i class="ri-error-warning-line fs-18 me-2"></i>
-                        Failed to load SMS details.
+                        Failed to load SMS details: ${error.message}
                     </div>
                 `;
             });

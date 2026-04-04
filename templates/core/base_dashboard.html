@@ -89,12 +89,19 @@
                 </a>
             </li>
             <li class="menu-item">
-                <a href="#" class="menu-link{% if request.resolver_match.url_name == 'api_docs' %} active{% endif %}">
+                <a href="https://nanomailer-sms-gateway.docs.buildwithfern.com/nano-mailer-sms-gateway" target="_blank" class="menu-link">
                     <span class="material-symbols-outlined menu-icon">code</span>
-                    <span class="title">API Documentation</span>
+                    <span class="title">API Doc (Fern)</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="{% url 'api:swagger-ui' %}" target="_blank" class="menu-link">
+                    <span class="material-symbols-outlined menu-icon">code</span>
+                    <span class="title">API Doc (Swagger)</span>
                 </a>
             </li>
 
+            {% if user.is_superuser %}
             <li class="menu-title small text-uppercase">
                 <span class="menu-title-text">ADMIN</span>
             </li>
@@ -124,6 +131,7 @@
                     </li>
                 </ul>
             </li>
+            {% endif %}
 
             <li class="menu-title small text-uppercase{% if request.resolver_match.url_name in 'profile,change_password' %} open{% endif %}">
                 <span class="menu-title-text">ACCOUNT</span>

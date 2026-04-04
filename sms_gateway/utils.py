@@ -3,6 +3,7 @@ SMS Gateway utilities - integrates with core SMSProvider model
 """
 import logging
 from decimal import Decimal
+from typing import Optional, Dict, Any
 from django.contrib.auth.models import User
 from core.models import SMSProvider
 from .revesms import ReveSMSProvider
@@ -171,6 +172,9 @@ def get_sms_cost(message, is_unicode=False, provider=None, user=None):
     """
     Calculate SMS cost based on message length and type
     
+    Note: For new code, prefer using services.calculate_sms_cost() which provides
+    more comprehensive cost calculation including operator detection.
+    
     Args:
         message: SMS message
         is_unicode: Whether message is Unicode (auto-detected if not provided)
@@ -223,3 +227,76 @@ def get_sms_cost(message, is_unicode=False, provider=None, user=None):
         'total_cost': total_cost,
         'currency': 'BDT'
     }
+
+
+def send_sms_via_provider(
+    log_id: int,
+    recipient: str,
+    message: str,
+    sender_id: Optional[str] = None,
+    provider: Optional[SMSProvider] = None
+) -> Dict[str, Any]:
+    """
+    Send SMS via the configured provider and update the log.
+    This function is typically called by Celery tasks or directly when skip_queue=True.
+    
+    Args:
+        log_id: SMSLog ID to update
+        recipient: Phone number
+        message: SMS message content
+        sender_id: Sender ID (optional)
+        provider: SMSProvider instance (optional)
+        
+    Returns:
+        Dict with success status and response data
+    """
+    from .models import SMSLog
+    
+    try:
+        log = SMSLog.objects.get(id=log_id)
+    except SMSLog.DoesNotExist:
+        logger.error(f"SMS log {log_id} not found")
+        return {
+            'success': False,
+            'message': 'SMS log not found',
+            'response': None
+        }
+    
+    try:
+        # Get provider instance
+        sms_provider = get_sms_provider(provider)
+        
+        # If sender_id not provided, get from provider default
+        if not sender_id and provider:
+            sender_id = provider.credentials.get('sender_id')
+        
+        # Send SMS
+        result = sms_provider.send_sms(
+            recipient=recipient,
+            message=message,
+            sender_id=sender_id
+        )
+        
+        # Update log with result
+        log.status = 'SENT' if result.get('success') else 'FAILED'
+        log.message_id = result.get('message_id')
+        log.response_data = result.get('response', {})
+        if not result.get('success'):
+            log.error_message = result.get('message')
+        log.save(update_fields=['status', 'message_id', 'response_data', 'error_message'])
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error sending SMS via provider: {str(e)}")
+        
+        # Update log with error
+        log.status = 'FAILED'
+        log.error_message = str(e)
+        log.save(update_fields=['status', 'error_message'])
+        
+        return {
+            'success': False,
+            'message': str(e),
+            'response': None
+        }
