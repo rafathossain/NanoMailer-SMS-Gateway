@@ -103,33 +103,3 @@ def send_sms_task(self, log_id):
         # Retry the task
         logger.warning(f"Retrying SMS {log_id} (attempt {self.request.retries + 1}/3)")
         raise self.retry(exc=e)
-
-
-@shared_task
-def process_bulk_sms(log_ids):
-    """
-    Process multiple SMS in bulk.
-    
-    Args:
-        log_ids: List of SMSLog IDs to process
-        
-    Returns:
-        dict: Summary of bulk processing results
-    """
-    results = {
-        'total': len(log_ids),
-        'successful': 0,
-        'failed': 0,
-        'errors': []
-    }
-    
-    for log_id in log_ids:
-        try:
-            result = send_sms_task.delay(log_id)
-            results['successful'] += 1
-        except Exception as e:
-            results['failed'] += 1
-            results['errors'].append(f"Log {log_id}: {str(e)}")
-    
-    logger.info(f"Bulk SMS processing initiated: {results}")
-    return results
