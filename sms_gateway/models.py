@@ -103,7 +103,6 @@ class UserSMSRate(models.Model):
     
     # Common operators in Bangladesh
     OPERATOR_CHOICES = [
-        ('default', 'Default (All Operators)'),
         ('grameenphone', 'Grameenphone'),
         ('banglalink', 'Banglalink'),
         ('robi', 'Robi'),
@@ -115,7 +114,7 @@ class UserSMSRate(models.Model):
     operator = models.CharField(
         max_length=20, 
         choices=OPERATOR_CHOICES,
-        default='default',
+        default='grameenphone',
         help_text='Mobile operator'
     )
     message_type = models.CharField(

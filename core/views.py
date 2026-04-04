@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 import json
 import logging
-from .models import DefaultRate, SMSProvider, SenderID, PaymentGateway, Profile
+from .models import DefaultRate, SMSProvider, SenderID, PaymentGateway, Profile, UserSenderID
 
 # Logger
 general_logger = logging.getLogger('general')
@@ -71,8 +71,12 @@ def sms_rates_view(request):
             'non_masking_rate': op_data.get('non_masking'),
         })
     
+    # Get sender IDs for display
+    sender_ids = SenderID.objects.select_related('provider').all().order_by('-created_at')
+    
     context = {
         'operators': operators_list,
+        'sender_ids': sender_ids,
     }
     return render(request, 'core/sms_rates.html', context)
 
@@ -632,77 +636,115 @@ def user_sms_rates_view(request, user_id):
         messages.error(request, 'User not found')
         return redirect('users')
     
-    # Get default provider rates for reference
-    provider = SMSProvider.get_default_provider()
+    # Get default rates from DefaultRate model
+    default_rate = DefaultRate.get_instance()
+    
+    # Operator mapping: code -> name
+    operators = {
+        'gp': 'Grameenphone',
+        'bl': 'Banglalink', 
+        'robi': 'Robi',
+        'airtel': 'Airtel',
+        'teletalk': 'Teletalk',
+    }
     
     if request.method == 'POST':
         action = request.POST.get('action')
         
         if action == 'update_rates':
-            # Update rates for all operators
-            operators = ['default', 'grameenphone', 'banglalink', 'robi', 'airtel', 'teletalk']
-            message_types = ['masking', 'non_masking']
-            
-            for operator in operators:
-                for msg_type in message_types:
-                    rate_key = f"rate_{operator}_{msg_type}"
-                    rate_value = request.POST.get(rate_key, '').strip()
-                    
-                    if rate_value:
-                        try:
-                            rate_decimal = float(rate_value)
-                            # Update or create rate
-                            UserSMSRate.objects.update_or_create(
-                                user=user,
-                                operator=operator,
-                                message_type=msg_type,
-                                defaults={'rate': rate_decimal, 'is_active': True}
-                            )
-                        except ValueError:
-                            messages.error(request, f'Invalid rate value for {operator} {msg_type}')
-                    else:
-                        # Deactivate this rate (use default)
-                        UserSMSRate.objects.filter(
-                            user=user,
-                            operator=operator,
-                            message_type=msg_type
-                        ).update(is_active=False)
+            for op_code, op_name in operators.items():
+                masking_key = f'{op_code}_masking'
+                non_masking_key = f'{op_code}_non_masking'
+                
+                masking_val = request.POST.get(masking_key, '').strip()
+                non_masking_val = request.POST.get(non_masking_key, '').strip()
+                
+                user_op_code = op_code if op_code in ['robi', 'airtel', 'teletalk'] else ('grameenphone' if op_code == 'gp' else 'banglalink')
+                
+                if masking_val:
+                    UserSMSRate.objects.update_or_create(
+                        user=user,
+                        operator=user_op_code,
+                        message_type='masking',
+                        defaults={'rate': float(masking_val), 'is_active': True}
+                    )
+                
+                if non_masking_val:
+                    UserSMSRate.objects.update_or_create(
+                        user=user,
+                        operator=user_op_code,
+                        message_type='non_masking',
+                        defaults={'rate': float(non_masking_val), 'is_active': True}
+                    )
             
             messages.success(request, f'SMS rates updated for {user.get_full_name() or user.username}')
             return redirect('user_sms_rates', user_id=user.id)
+        
+        elif action == 'assign_sender_id':
+            sender_id_id = request.POST.get('sender_id_id')
+            try:
+                sender_id = SenderID.objects.get(id=sender_id_id)
+                # Check if already assigned
+                if not UserSenderID.objects.filter(user=user, sender_id=sender_id).exists():
+                    UserSenderID.objects.create(user=user, sender_id=sender_id, is_active=True)
+                    messages.success(request, f'Sender ID "{sender_id.sender_id}" assigned to user.')
+                else:
+                    messages.warning(request, f'Sender ID "{sender_id.sender_id}" is already assigned to this user.')
+            except SenderID.DoesNotExist:
+                messages.error(request, 'Sender ID not found.')
+            return redirect('user_sms_rates', user_id=user.id)
+        
+        elif action == 'remove_sender_id':
+            user_sender_id_id = request.POST.get('user_sender_id_id')
+            try:
+                user_sender_id = UserSenderID.objects.get(id=user_sender_id_id, user=user)
+                sender_id_name = user_sender_id.sender_id.sender_id
+                user_sender_id.delete()
+                messages.success(request, f'Sender ID "{sender_id_name}" removed from user.')
+            except UserSenderID.DoesNotExist:
+                messages.error(request, 'Assignment not found.')
+            return redirect('user_sms_rates', user_id=user.id)
     
-    # Build rate data for template
-    operators = [
-        ('default', 'Default (All Operators)'),
-        ('grameenphone', 'Grameenphone'),
-        ('banglalink', 'Banglalink'),
-        ('robi', 'Robi'),
-        ('airtel', 'Airtel'),
-        ('teletalk', 'Teletalk'),
-    ]
+    # Build rates for template
+    rates = []
+    for op_code, op_name in operators.items():
+        user_op_code = op_code if op_code in ['robi', 'airtel', 'teletalk'] else ('grameenphone' if op_code == 'gp' else 'banglalink')
+        
+        default_op_rates = default_rate.operator_rates.get(op_code, {})
+        default_masking = default_op_rates.get('masking', 0.35)
+        default_non_masking = default_op_rates.get('non_masking', 0.25)
+        
+        try:
+            user_masking = UserSMSRate.objects.get(user=user, operator=user_op_code, message_type='masking', is_active=True).rate
+        except UserSMSRate.DoesNotExist:
+            user_masking = None
+        
+        try:
+            user_non_masking = UserSMSRate.objects.get(user=user, operator=user_op_code, message_type='non_masking', is_active=True).rate
+        except UserSMSRate.DoesNotExist:
+            user_non_masking = None
+        
+        rates.append({
+            'code': op_code,
+            'name': op_name,
+            'masking': user_masking if user_masking is not None else default_masking,
+            'non_masking': user_non_masking if user_non_masking is not None else default_non_masking,
+        })
     
-    message_types = [
-        ('masking', 'Masking'),
-        ('non_masking', 'Non-Masking'),
-    ]
+    # Get all available sender IDs
+    all_sender_ids = SenderID.objects.select_related('provider').all().order_by('-created_at')
     
-    # Get user's rates
-    user_rates = {}
-    for rate in UserSMSRate.objects.filter(user=user, is_active=True):
-        key = f"{rate.operator}_{rate.message_type}"
-        user_rates[key] = rate.rate
+    # Get user's assigned sender IDs
+    user_sender_ids = UserSenderID.objects.select_related('sender_id', 'sender_id__provider').filter(user=user, is_active=True).order_by('-created_at')
     
-    # Get default rates from provider
-    default_masking_rate = provider.masking_rate if provider else 0.35
-    default_non_masking_rate = provider.non_masking_rate if provider else 0.25
+    # Get IDs of already assigned sender IDs to exclude from modal
+    assigned_sender_id_ids = list(user_sender_ids.values_list('sender_id_id', flat=True))
     
     context = {
         'target_user': user,
-        'operators': operators,
-        'message_types': message_types,
-        'user_rates': user_rates,
-        'default_masking_rate': default_masking_rate,
-        'default_non_masking_rate': default_non_masking_rate,
-        'provider': provider,
+        'rates': rates,
+        'all_sender_ids': all_sender_ids,
+        'user_sender_ids': user_sender_ids,
+        'assigned_sender_id_ids': assigned_sender_id_ids,
     }
     return render(request, 'core/user_sms_rates.html', context)

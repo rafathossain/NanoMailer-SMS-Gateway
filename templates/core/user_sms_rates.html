@@ -1,17 +1,12 @@
 {% extends 'core/base_dashboard.html' %}
 {% load static %}
-{% load custom_filters %}
 
 {% block title %}User SMS Rates - {{ target_user.get_full_name|default:target_user.username }}{% endblock %}
 
 {% block content %}
 <div class="main-content-container overflow-hidden">
-    <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-        <div>
-            <h3 class="mb-1">Configure User SMS Rates</h3>
-            <p class="text-secondary fs-14 mb-0">Set custom operator-wise SMS rates for {{ target_user.get_full_name|default:target_user.username }}</p>
-        </div>
+        <h3 class="mb-0">Configure User SMS Rates</h3>
         <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
             <ol class="breadcrumb align-items-center mb-0 lh-1">
                 <li class="breadcrumb-item">
@@ -30,7 +25,6 @@
         </nav>
     </div>
 
-    <!-- Messages -->
     {% if messages %}
         {% for message in messages %}
             {% if message.tags == 'success' %}
@@ -49,205 +43,284 @@
         {% endfor %}
     {% endif %}
 
-    <!-- User Info Card -->
     <div class="card bg-white border-0 rounded-3 mb-4">
         <div class="card-body p-4">
-            <div class="d-flex align-items-center flex-wrap gap-4">
+            <div class="d-flex align-items-center">
                 <div class="flex-shrink-0">
                     {% if target_user.profile.photo %}
-                        <img class="rounded-circle" src="{{ target_user.profile.photo.url }}" alt="{{ target_user.get_full_name }}" style="width: 80px; height: 80px; object-fit: cover;">
+                        <img class="rounded-circle" src="{{ target_user.profile.photo.url }}" alt="{{ target_user.get_full_name }}" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #e9ecef;">
                     {% else %}
-                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                            <span class="fw-bold text-primary fs-32">{{ target_user.get_full_name|first|upper|default:target_user.username|first|upper }}</span>
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="fw-bold text-primary fs-20">{{ target_user.get_full_name|first|upper|default:target_user.username|first|upper }}</span>
                         </div>
                     {% endif %}
                 </div>
-                <div class="flex-grow-1">
-                    <h4 class="fw-semibold mb-1">{{ target_user.get_full_name|default:target_user.username }}</h4>
-                    <span class="text-secondary d-block mb-2">{{ target_user.email }}</span>
-                    <div class="d-flex gap-2">
-                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fs-12">
-                            <i class="ri-wallet-3-line me-1"></i>Balance: ৳{{ target_user.profile.balance|default:"0.00"|floatformat:2 }}
-                        </span>
-                        {% if target_user.is_active %}
-                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fs-12">
-                                <i class="ri-check-line me-1"></i>Active User
-                            </span>
-                        {% else %}
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill fs-12">
-                                <i class="ri-close-line me-1"></i>Inactive User
-                            </span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="flex-shrink-0">
-                    <a href="{% url 'users' %}" class="btn btn-outline-secondary">
-                        <i class="ri-arrow-left-line me-1"></i>Back to Users
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reference Rates Card -->
-    <div class="card bg-info bg-opacity-10 border-0 rounded-3 mb-4">
-        <div class="card-body p-4">
-            <div class="d-flex">
-                <div class="flex-shrink-0">
-                    <i class="ri-information-line fs-24 text-info"></i>
-                </div>
                 <div class="flex-grow-1 ms-3">
-                    <h6 class="fw-semibold mb-2">Default Provider Rates (Reference)</h6>
-                    <div class="row">
-                        <div class="col-md-6 mb-2 mb-md-0">
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-3">
-                                <span class="text-secondary">Default Masking Rate</span>
-                                <span class="fw-bold text-primary fs-18">৳ {{ default_masking_rate|floatformat:2 }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-3">
-                                <span class="text-secondary">Default Non-Masking Rate</span>
-                                <span class="fw-bold text-primary fs-18">৳ {{ default_non_masking_rate|floatformat:2 }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-secondary fs-14 mt-3 mb-0">
-                        <i class="ri-lightbulb-line me-1"></i>
-                        Leave fields empty to use default provider rates. Custom rates set here will override defaults for this user only.
-                    </p>
+                    <h5 class="fw-semibold mb-0">{{ target_user.get_full_name|default:target_user.username }}</h5>
+                    <span class="text-secondary fs-14">{{ target_user.email }}</span>
+                </div>
+                <div class="flex-shrink-0">
+                    <a href="{% url 'users' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="ri-arrow-left-line me-1"></i>Back
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SMS Rates Configuration Form -->
-    <div class="card bg-white border-0 rounded-3 mb-4">
-        <div class="card-body p-0">
-            <!-- Table Header -->
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4 border-bottom">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="ri-money-dollar-circle-line me-2 text-primary"></i>Operator-wise SMS Rates
-                </h5>
-                <span class="badge bg-light text-secondary fs-12">{{ operators|length }} operators</span>
+    <div class="row">
+        <div class="col-md-6 mb-4 mb-md-0">
+            <div class="card bg-white border-0 rounded-3 h-100">
+                <div class="card-body p-0">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
+                        <h3 class="mb-0">Operator SMS Rates</h3>
+                    </div>
+
+                    <form method="POST" action="{% url 'user_sms_rates' target_user.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_rates">
+
+                        <div class="default-table-area style-two all-products">
+                            <style>
+                                .table-sm td, .table-sm th {
+                                    padding: 0.25rem 0.5rem;
+                                    white-space: nowrap;
+                                }
+                                .table-sm td:first-child, .table-sm th:first-child {
+                                    padding-left: 1rem;
+                                }
+                                .table-sm td:last-child, .table-sm th:last-child {
+                                    padding-right: 1rem;
+                                }
+                            </style>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle" style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Operator</th>
+                                            <th>Masking</th>
+                                            <th>Non-Masking</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for rate in rates %}
+                                        <tr>
+                                            <td class="text-secondary fw-medium">{{ rate.name }}</td>
+                                            <td>
+                                                <input type="number" 
+                                                       name="{{ rate.code }}_masking" 
+                                                       class="form-control form-control-sm" 
+                                                       value="{{ rate.masking }}" 
+                                                       step="0.01" 
+                                                       min="0" 
+                                                       style="width: 100px;">
+                                            </td>
+                                            <td>
+                                                <input type="number" 
+                                                       name="{{ rate.code }}_non_masking" 
+                                                       class="form-control form-control-sm" 
+                                                       value="{{ rate.non_masking }}" 
+                                                       step="0.01" 
+                                                       min="0" 
+                                                       style="width: 100px;">
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 p-4">
+                                <a href="{% url 'users' %}" class="btn btn-outline-secondary py-2 px-4">Cancel</a>
+                                <button type="submit" class="btn btn-primary py-2 px-4">
+                                    <i class="ri-save-line me-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
+        </div>
 
-            <form method="POST" action="{% url 'user_sms_rates' target_user.id %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="update_rates">
+        <div class="col-md-6">
+            <div class="card bg-white border-0 rounded-3 h-100">
+                <div class="card-body p-0">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
+                        <h3 class="mb-0">Assigned Sender IDs</h3>
+                        <button class="btn btn-outline-primary hover-bg fs-14 fw-medium" data-bs-toggle="modal" data-bs-target="#assignSenderIdModal">
+                            <i class="ri-add-line"></i>
+                            <span>Assign</span>
+                        </button>
+                    </div>
 
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="userRatesTable">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-4 fw-semibold text-secondary fs-14">Operator</th>
-                                <th class="fw-semibold text-secondary fs-14">Masking Rate (per SMS)</th>
-                                <th class="pe-4 fw-semibold text-secondary fs-14">Non-Masking Rate (per SMS)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for operator_key, operator_name in operators %}
-                            {% with masking_key=operator_key|add:"_masking" non_masking_key=operator_key|add:"_non_masking" %}
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0">
-                                            <div class="bg-primary bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                                                <i class="ri-smartphone-line fs-20 text-primary"></i>
+                    <div class="default-table-area style-two all-products">
+                        <style>
+                            .table-sm td, .table-sm th {
+                                padding: 0.25rem 0.5rem;
+                                white-space: nowrap;
+                            }
+                            .table-sm td:first-child, .table-sm th:first-child {
+                                padding-left: 1rem;
+                            }
+                            .table-sm td:last-child, .table-sm th:last-child {
+                                padding-right: 1rem;
+                            }
+                        </style>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <th>Sender ID</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user_sender_id in user_sender_ids %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center" style="min-width: 0;">
+                                                <span class="material-symbols-outlined fs-20 text-primary flex-shrink-0">business</span>
+                                                <div class="ms-2 ps-1 overflow-hidden text-truncate">
+                                                    <h6 class="fw-medium fs-14 mb-0 text-truncate">{{ user_sender_id.sender_id.provider.name }}</h6>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3">
-                                            <h6 class="fw-semibold fs-14 mb-0">{{ operator_name }}</h6>
-                                            <span class="fs-12 text-secondary">{{ operator_key }}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="input-group" style="max-width: 200px;">
-                                        <span class="input-group-text bg-light">৳</span>
-                                        <input type="number" 
-                                               class="form-control" 
-                                               name="rate_{{ operator_key }}_masking" 
-                                               placeholder="{{ default_masking_rate|floatformat:2 }}"
-                                               value="{{ user_rates|get_item:masking_key|default:'' }}"
-                                               step="0.01"
-                                               min="0">
-                                    </div>
-                                    {% if user_rates|get_item:masking_key %}
-                                        <span class="fs-12 text-success mt-1 d-block">
-                                            <i class="ri-check-line me-1"></i>Custom: ৳{{ user_rates|get_item:masking_key|floatformat:2 }}
-                                        </span>
-                                    {% else %}
-                                        <span class="fs-12 text-secondary mt-1 d-block">
-                                            <i class="ri-information-line me-1"></i>Using default
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td class="pe-4">
-                                    <div class="input-group" style="max-width: 200px;">
-                                        <span class="input-group-text bg-light">৳</span>
-                                        <input type="number" 
-                                               class="form-control" 
-                                               name="rate_{{ operator_key }}_non_masking" 
-                                               placeholder="{{ default_non_masking_rate|floatformat:2 }}"
-                                               value="{{ user_rates|get_item:non_masking_key|default:'' }}"
-                                               step="0.01"
-                                               min="0">
-                                    </div>
-                                    {% if user_rates|get_item:non_masking_key %}
-                                        <span class="fs-12 text-success mt-1 d-block">
-                                            <i class="ri-check-line me-1"></i>Custom: ৳{{ user_rates|get_item:non_masking_key|floatformat:2 }}
-                                        </span>
-                                    {% else %}
-                                        <span class="fs-12 text-secondary mt-1 d-block">
-                                            <i class="ri-information-line me-1"></i>Using default
-                                        </span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endwith %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary px-2 rounded-pill fs-12 fw-medium">{{ user_sender_id.sender_id.sender_id }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" onclick="removeSenderId({{ user_sender_id.id }}, '{{ user_sender_id.sender_id.sender_id|escapejs }}')">
+                                                <i class="material-symbols-outlined fs-16 text-danger">delete</i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4 text-secondary">
+                                            <i class="ri-inbox-line fs-24 mb-2 d-block"></i>
+                                            No sender IDs assigned.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="d-flex justify-content-end gap-2 p-4 border-top bg-light">
-                    <a href="{% url 'users' %}" class="btn btn-outline-secondary">
-                        <i class="ri-close-line me-1"></i>Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ri-save-line me-1"></i>Save All Rates
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<style>
-#userRatesTable tbody tr:hover {
-    background-color: rgba(var(--bs-primary-rgb), 0.02);
-}
-#userRatesTable input[type="number"]:focus {
-    border-color: var(--bs-primary);
-    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
-}
-</style>
+<!-- Assign Sender ID Modal -->
+<div class="modal fade" id="assignSenderIdModal" tabindex="-1" aria-labelledby="assignSenderIdModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="assignSenderIdModalLabel">Assign Sender ID</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Provider</th>
+                                <th>Sender ID</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sender_id in all_sender_ids %}
+                            {% if sender_id.id not in assigned_sender_id_ids %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center" style="min-width: 0;">
+                                        <span class="material-symbols-outlined fs-20 text-primary flex-shrink-0">business</span>
+                                        <div class="ms-2 ps-1 overflow-hidden text-truncate">
+                                            <h6 class="fw-medium fs-14 mb-0 text-truncate">{{ sender_id.provider.name }}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary px-2 rounded-pill fs-12 fw-medium">{{ sender_id.sender_id }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <form method="POST" action="{% url 'user_sms_rates' target_user.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="assign_sender_id">
+                                        <input type="hidden" name="sender_id_id" value="{{ sender_id.id }}">
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="ri-add-line me-1"></i>Assign
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-secondary">
+                                    No available sender IDs to assign.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Highlight changed inputs
-    const inputs = document.querySelectorAll('#userRatesTable input[type="number"]');
-    inputs.forEach(input => {
-        const originalValue = input.value;
-        input.addEventListener('change', function() {
-            if (this.value !== originalValue) {
-                this.classList.add('border-primary');
-            } else {
-                this.classList.remove('border-primary');
-            }
-        });
+function removeSenderId(userSenderIdId, senderIdName) {
+    Swal.fire({
+        title: 'Remove Sender ID?',
+        text: 'Remove "' + senderIdName + '" from this user?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '{% url "user_sms_rates" target_user.id %}';
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = '{{ csrf_token }}';
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'remove_sender_id';
+            
+            const userSenderIdInput = document.createElement('input');
+            userSenderIdInput.type = 'hidden';
+            userSenderIdInput.name = 'user_sender_id_id';
+            userSenderIdInput.value = userSenderIdId;
+            
+            form.appendChild(csrfToken);
+            form.appendChild(actionInput);
+            form.appendChild(userSenderIdInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
     });
-});
+}
 </script>
+
+<style>
+.main-content-container {
+    padding-bottom: 2rem;
+}
+</style>
 {% endblock %}

@@ -231,6 +231,35 @@ class SenderID(models.Model):
         return f"{self.sender_id} ({self.provider.name})"
 
 
+class UserSenderID(models.Model):
+    """User-specific sender ID assignments"""
+    user = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='assigned_sender_ids',
+        help_text='User who owns this sender ID'
+    )
+    sender_id = models.ForeignKey(
+        SenderID,
+        on_delete=models.CASCADE,
+        related_name='user_assignments',
+        help_text='Assigned sender ID'
+    )
+    is_active = models.BooleanField(default=True, help_text='Is this sender ID active for the user?')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'user_sender_ids'
+        verbose_name = 'User Sender ID'
+        verbose_name_plural = 'User Sender IDs'
+        ordering = ['-created_at']
+        unique_together = ['user', 'sender_id']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.sender_id.sender_id}"
+
+
 def gateway_logo_path(instance, filename):
     """Upload gateway logos to gateways/ directory with UUID filename"""
     ext = filename.split('.')[-1].lower()
