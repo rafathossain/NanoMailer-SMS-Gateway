@@ -111,6 +111,12 @@
                     <span class="title">Users</span>
                 </a>
             </li>
+            <li class="menu-item{% if request.resolver_match.url_name == 'manual_add_fund' %} open{% endif %}">
+                <a href="{% url 'payment_gateway:manual_add_fund' %}" class="menu-link{% if request.resolver_match.url_name == 'manual_add_fund' %} active{% endif %}">
+                    <span class="material-symbols-outlined menu-icon">add_card</span>
+                    <span class="title">Add Fund</span>
+                </a>
+            </li>
             <li class="menu-item{% if request.resolver_match.url_name == 'admin_sms_log' %} open{% endif %}">
                 <a href="{% url 'admin_sms_log' %}" class="menu-link{% if request.resolver_match.url_name == 'admin_sms_log' %} active{% endif %}">
                     <span class="material-symbols-outlined menu-icon">history</span>

@@ -2,11 +2,12 @@
 Views for payment gateway integration
 """
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 from decimal import Decimal, InvalidOperation
 from .utils import initiate_payment, validate_payment, get_user_transactions
 from .models import Transaction
@@ -141,30 +142,60 @@ def payment_success_view(request):
     
     logger.info(f"payment_success_view called: method={request.method}")
     
-    # SSLCommerz sends data in POST (not GET)
     # Check both GET and POST for the data
     data = request.POST if request.POST else request.GET
     
     logger.info(f"Data received: {data}")
     
     val_id = data.get('val_id')
-    tran_id = data.get('tran_id')
+    tran_id = data.get('tran_id') or data.get('mer_txnid')
     amount = data.get('amount')
-    status = data.get('status')
+    status = data.get('status') or data.get('pay_status')
     
     logger.info(f"Extracted: val_id={val_id}, tran_id={tran_id}, amount={amount}, status={status}")
     
-    if tran_id and status == 'VALID':
-        # Validate the payment with SSLCommerz
-        validation_data = {
-            'tran_id': tran_id,
-            'val_id': val_id,
-            'amount': amount,
-            'status': status
-        }
+    if not tran_id:
+        logger.error("No transaction ID found in callback data")
+        messages.error(request, 'Invalid callback: Transaction ID missing')
+        return redirect('payment_gateway:add_fund')
+    
+    # Try to find the transaction to determine which gateway was used
+    gateway_class = 'SSLCOMMERZ'  # Default to SSLCommerz for backward compatibility
+    try:
+        transaction = Transaction.objects.get(transaction_id=tran_id)
+        if transaction.gateway:
+            gateway_class = transaction.gateway.gateway_class
+            logger.info(f"Found transaction with gateway: {gateway_class}")
+    except Transaction.DoesNotExist:
+        logger.warning(f"Transaction not found: {tran_id}")
+    
+    # Check if this is a valid success callback
+    # SSLCommerz uses 'VALID' status, aamarPay uses 'SUCCESSFUL' or 'Successful'
+    is_valid_status = (
+        status in ['VALID', 'SUCCESSFUL', 'Successful'] or 
+        (gateway_class == 'AAMARPAY' and data.get('pay_status') in ['SUCCESSFUL', 'Successful'])
+    )
+    
+    if is_valid_status:
+        # Prepare validation data based on gateway
+        if gateway_class == 'AAMARPAY':
+            validation_data = {
+                'mer_txnid': tran_id,
+                'pay_txnid': data.get('pay_txnid'),
+                'amount': amount,
+                'pay_status': data.get('pay_status'),
+                'pg_txnid': data.get('pg_txnid'),
+            }
+        else:  # SSLCOMMERZ
+            validation_data = {
+                'tran_id': tran_id,
+                'val_id': val_id,
+                'amount': amount,
+                'status': status
+            }
         
-        logger.info(f"Calling validate_payment with: {validation_data}")
-        result = validate_payment('SSLCOMMERZ', validation_data)
+        logger.info(f"Calling validate_payment for {gateway_class} with: {validation_data}")
+        result = validate_payment(gateway_class, validation_data)
         logger.info(f"validate_payment result: {result}")
         
         if result.get('success'):
@@ -237,3 +268,114 @@ def api_check_transaction_status(request, transaction_id):
             'success': False,
             'message': 'Transaction not found'
         }, status=404)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def manual_add_fund_view(request):
+    """View for superuser to manually add funds to a user account"""
+    from django.contrib.auth.models import User
+    from core.models import PaymentGateway
+    
+    # Get all users for dropdown
+    users = User.objects.select_related('profile').all().order_by('email')
+    
+    # Get active gateways for reference
+    gateways = PaymentGateway.objects.filter(is_active=True)
+    
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        amount = request.POST.get('amount', '0').strip()
+        payment_method = request.POST.get('payment_method', '').strip()
+        transaction_id = request.POST.get('transaction_id', '').strip()
+        notes = request.POST.get('notes', '').strip()
+        
+        # Validation
+        errors = []
+        
+        if not user_id:
+            errors.append('Please select a user')
+        
+        try:
+            amount_decimal = Decimal(amount)
+            if amount_decimal <= 0:
+                errors.append('Amount must be greater than 0')
+        except (InvalidOperation, ValueError):
+            errors.append('Invalid amount entered')
+        
+        if not payment_method:
+            errors.append('Payment method is required')
+        
+        if not transaction_id:
+            errors.append('Transaction ID is required')
+        
+        # Check if transaction ID already exists
+        if transaction_id and Transaction.objects.filter(transaction_id=transaction_id).exists():
+            errors.append(f'Transaction ID "{transaction_id}" already exists')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            context = {
+                'users': users,
+                'gateways': gateways,
+                'form_data': {
+                    'user_id': user_id,
+                    'amount': amount,
+                    'payment_method': payment_method,
+                    'transaction_id': transaction_id,
+                    'notes': notes,
+                }
+            }
+            return render(request, 'payment_gateway/manual_add_fund.html', context)
+        
+        # Get the user
+        try:
+            target_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            messages.error(request, 'User not found')
+            return redirect('payment_gateway:manual_add_fund')
+        
+        # Get or create a default gateway for this transaction
+        gateway = PaymentGateway.objects.filter(is_active=True).first()
+        
+        # Create completed transaction
+        transaction = Transaction.objects.create(
+            user=target_user,
+            gateway=gateway,
+            transaction_id=transaction_id,
+            gateway_transaction_id=transaction_id,
+            amount=amount_decimal,
+            tdr_amount=Decimal('0.00'),
+            total_amount=amount_decimal,
+            status='COMPLETED',
+            gateway_response={
+                'manual_entry': True,
+                'added_by': request.user.email,
+                'payment_method': payment_method,
+                'notes': notes,
+            },
+            validation_response={
+                'manual_entry': True,
+                'added_by': request.user.email,
+                'added_at': timezone.now().isoformat(),
+            },
+            completed_at=timezone.now()
+        )
+        
+        # Add balance to user profile
+        if hasattr(target_user, 'profile'):
+            target_user.profile.deposit(amount_decimal)
+        
+        messages.success(
+            request, 
+            f'Successfully added ৳{amount_decimal} to {target_user.email}\'s account. '
+            f'Transaction ID: {transaction_id}'
+        )
+        return redirect('payment_gateway:manual_add_fund')
+    
+    context = {
+        'users': users,
+        'gateways': gateways,
+    }
+    return render(request, 'payment_gateway/manual_add_fund.html', context)

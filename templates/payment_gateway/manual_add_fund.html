@@ -1,0 +1,217 @@
+{% extends 'core/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Manual Add Fund - SMS Gateway{% endblock %}
+
+{% block content %}
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Manual Add Fund</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Billing</span>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Manual Add Fund</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success bg-success bg-opacity-10 border-0 text-success d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="ri-error-warning-line fs-18 me-2"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="ri-wallet-3-line fs-24 text-success"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1">Add Fund to User Account</h4>
+                            <p class="text-secondary mb-0 fs-14">Manually add fund to any user account with transaction details</p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{% url 'payment_gateway:manual_add_fund' %}">
+                        {% csrf_token %}
+                        
+                        <!-- User Selection -->
+                        <div class="form-group mb-4">
+                            <label class="label text-secondary mb-2 d-flex align-items-center">
+                                <i class="ri-user-line me-2 text-primary"></i>
+                                Select User <span class="text-danger">*</span>
+                            </label>
+                            <select name="user_id" class="form-select h-55" required>
+                                <option value="">-- Select User --</option>
+                                {% for u in users %}
+                                <option value="{{ u.id }}" {% if form_data.user_id == u.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ u.email }} {% if u.get_full_name %}({{ u.get_full_name }}){% endif %} - Balance: ৳{{ u.profile.balance|default:"0.00" }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <span class="fs-12 text-secondary mt-1 d-block">Select the user to receive the fund</span>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="form-group mb-4">
+                            <label class="label text-secondary mb-2 d-flex align-items-center">
+                                <i class="ri-money-cny-circle-line me-2 text-primary"></i>
+                                Amount (BDT) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">৳</span>
+                                <input type="number" name="amount" class="form-control h-55" 
+                                       placeholder="Enter amount" min="1" step="0.01" 
+                                       value="{{ form_data.amount }}" required>
+                            </div>
+                            <span class="fs-12 text-secondary mt-1 d-block">Enter the amount to add to user balance</span>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="form-group mb-4">
+                            <label class="label text-secondary mb-2 d-flex align-items-center">
+                                <i class="ri-bank-card-line me-2 text-primary"></i>
+                                Payment Method <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="payment_method" class="form-control h-55" 
+                                   placeholder="e.g., Bank Transfer, Cash, bKash, etc." 
+                                   value="{{ form_data.payment_method }}" required>
+                            <span class="fs-12 text-secondary mt-1 d-block">Enter the payment method used</span>
+                        </div>
+
+                        <!-- Transaction ID -->
+                        <div class="form-group mb-4">
+                            <label class="label text-secondary mb-2 d-flex align-items-center">
+                                <i class="ri-hashtag me-2 text-primary"></i>
+                                Transaction ID <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="transaction_id" class="form-control h-55" 
+                                   placeholder="Enter unique transaction ID" 
+                                   value="{{ form_data.transaction_id }}" required>
+                            <span class="fs-12 text-secondary mt-1 d-block">Enter a unique transaction reference ID</span>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group mb-4">
+                            <label class="label text-secondary mb-2 d-flex align-items-center">
+                                <i class="ri-file-text-line me-2 text-primary"></i>
+                                Notes (Optional)
+                            </label>
+                            <textarea name="notes" class="form-control" rows="3" 
+                                      placeholder="Add any additional notes about this transaction">{{ form_data.notes }}</textarea>
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="alert bg-info bg-opacity-10 border-0 text-info mb-4">
+                            <div class="d-flex">
+                                <i class="ri-information-line fs-18 me-2 mt-1"></i>
+                                <div>
+                                    <strong>Important:</strong>
+                                    <ul class="mb-0 mt-1 ps-3">
+                                        <li>This will create a COMPLETED transaction and immediately add the amount to the user's balance.</li>
+                                        <li>The transaction will be recorded as a manual entry added by <strong>{{ user.email }}</strong>.</li>
+                                        <li>Ensure the Transaction ID is unique to avoid conflicts.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary py-2 px-4 fw-medium">
+                                <i class="ri-add-circle-line me-2"></i>
+                                Add Fund to User
+                            </button>
+                            <a href="{% url 'payment_gateway:add_fund' %}" class="btn btn-outline-secondary py-2 px-4 fw-medium">
+                                <i class="ri-arrow-left-line me-2"></i>
+                                Back to Add Fund
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="col-lg-4">
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="mb-4 d-flex align-items-center">
+                        <i class="ri-shield-check-line me-2 text-primary"></i>
+                        Admin Privileges
+                    </h5>
+                    
+                    <div class="alert bg-success bg-opacity-10 border-0 text-success mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                            <strong>Superuser Access</strong>
+                        </div>
+                        <p class="mb-0 fs-14">You have permission to manually add funds to any user account.</p>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0 py-2 border-0 d-flex align-items-center">
+                            <i class="ri-check-line text-success me-2"></i>
+                            <span class="fs-14">Create completed transactions instantly</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 border-0 d-flex align-items-center">
+                            <i class="ri-check-line text-success me-2"></i>
+                            <span class="fs-14">Update user balance immediately</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 border-0 d-flex align-items-center">
+                            <i class="ri-check-line text-success me-2"></i>
+                            <span class="fs-14">Record payment method & details</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 border-0 d-flex align-items-center">
+                            <i class="ri-check-line text-success me-2"></i>
+                            <span class="fs-14">Audit trail with admin identity</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-white border-0 rounded-3">
+                <div class="card-body p-4">
+                    <h5 class="mb-3 d-flex align-items-center">
+                        <i class="ri-links-line me-2 text-primary"></i>
+                        Quick Links
+                    </h5>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'payment_gateway:transactions' %}" class="btn btn-outline-secondary text-start">
+                            <i class="ri-history-line me-2"></i>View All Transactions
+                        </a>
+                        <a href="{% url 'users' %}" class="btn btn-outline-secondary text-start">
+                            <i class="ri-user-list-line me-2"></i>Manage Users
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

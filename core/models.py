@@ -293,6 +293,7 @@ class PaymentGateway(models.Model):
     """Payment Gateway configuration model"""
     GATEWAY_CHOICES = [
         ('SSLCOMMERZ', 'SSLCommerz'),
+        ('AAMARPAY', 'aamarPay'),
         ('BKASH', 'bKash'),
     ]
     

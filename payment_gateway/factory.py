@@ -1,4 +1,5 @@
 from .sslcommerz import SSLCommerzGateway
+from .aamarpay import AamarPayGateway
 
 
 class GatewayFactory:
@@ -6,6 +7,7 @@ class GatewayFactory:
     
     GATEWAY_CLASSES = {
         'SSLCOMMERZ': SSLCommerzGateway,
+        'AAMARPAY': AamarPayGateway,
     }
     
     @classmethod

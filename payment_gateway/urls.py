@@ -13,6 +13,7 @@ urlpatterns = [
     path('fail', views.payment_fail_view, name='payment_fail'),
     path('cancel', views.payment_cancel_view, name='payment_cancel'),
     path('transaction/<str:transaction_id>', views.transaction_detail_view, name='transaction_detail'),
+    path('manual-add-fund', views.manual_add_fund_view, name='manual_add_fund'),
     
     # API endpoints
     path('api/transaction/<str:transaction_id>/status', views.api_check_transaction_status, name='api_transaction_status'),
